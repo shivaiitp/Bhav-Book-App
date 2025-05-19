@@ -11,6 +11,9 @@ yarn-error.log*
 # Environment variables
 .env
 
+# Firebase secret key
+config/serviceAccountKey.json
+
 # Debugger files
 *.pid
 *.seed

@@ -12,7 +12,7 @@ const router = express.Router();
 router.get("/", isAuthenticated, getJournalEntries);
 router.get("/:id", isAuthenticated, getJournalEntryById);
 router.post("/create", isAuthenticated, uploadJournalMedia, createJournalEntry);
-router.put("/journal/:id", isAuthenticated, uploadJournalMedia, updateJournalEntry);
+router.put("/:id", isAuthenticated, uploadJournalMedia, updateJournalEntry);
 router.delete("/:id", isAuthenticated, deleteJournalEntry);
 
 export default router;
