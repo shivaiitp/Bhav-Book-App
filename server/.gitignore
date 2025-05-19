@@ -12,7 +12,7 @@ yarn-error.log*
 .env
 
 # Firebase secret key
-config/serviceAccountKey.json
+config
 
 # Debugger files
 *.pid
