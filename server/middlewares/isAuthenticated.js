@@ -1,10 +1,11 @@
-import jwt from 'jsonwebtoken';
 import User from '../models/user.model.js';
-import admin from '../firebase.js';  // Make sure this exports the initialized firebase-admin app
+import admin from '../utils/firebase.js'; // your initialized Firebase Admin SDK
 
 const isAuthenticated = async (req, res, next) => {
   const authHeader = req.headers['authorization'];
+  
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    console.log('No token provided in Authorization header');
     return res.status(401).json({
       message: 'No token provided',
       success: false,
@@ -13,12 +14,12 @@ const isAuthenticated = async (req, res, next) => {
 
   const token = authHeader.split(' ')[1];
 
-  // Try verifying backend JWT token first
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded._id || decoded.id;
-    const user = await User.findById(userId);
-
+    // Verify Firebase ID token
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    const firebaseUid = decodedToken.uid;
+    // Find user in DB by Firebase UID
+    const user = await User.findOne({ firebaseUID: firebaseUid.trim() });
     if (!user) {
       return res.status(401).json({
         message: 'User not found',
@@ -26,22 +27,15 @@ const isAuthenticated = async (req, res, next) => {
       });
     }
 
-    req.user = user; // Attach full user object from DB
-    return next();
+    req.user = user; // attach full user object for downstream use
+    next();
 
-  } catch (jwtError) {
-    // If JWT verification fails, try Firebase token verification
-    try {
-      const decodedToken = await admin.auth().verifyIdToken(token);
-      req.user = decodedToken; // Firebase user info (uid, email, etc)
-      return next();
-    } catch (firebaseError) {
-      console.error('Auth Middleware Error (JWT and Firebase):', jwtError, firebaseError);
-      return res.status(401).json({
-        message: 'Invalid or expired token',
-        success: false,
-      });
-    }
+  } catch (error) {
+    console.error('Firebase Auth Middleware Error:', error);
+    return res.status(401).json({
+      message: 'Invalid or expired token',
+      success: false,
+    });
   }
 };
 

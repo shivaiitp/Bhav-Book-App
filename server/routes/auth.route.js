@@ -1,20 +1,20 @@
 import express from "express";
 import {
-  registerUser,
-  loginUser,
   updateUserProfile,
-  changePassword,
   logoutUser,
+  getUserProfile,
+  getProfileById,
 } from "../controllers/auth.controller.js";
 import { singleUpload } from "../middlewares/multer.js";
 import isAuthenticated from "../middlewares/isAuthenticated.js";
 
 const router = express.Router();
 
-router.post("/register", singleUpload, registerUser);
-router.post("/login", loginUser);
+// Profile routes - protected by Firebase token verification
 router.put("/profile/update", isAuthenticated, singleUpload, updateUserProfile);
-router.put("/change-password", isAuthenticated, changePassword);
 router.get("/logout", isAuthenticated, logoutUser);
+router.get("/profile",isAuthenticated, getUserProfile);
+router.get("/users/:id", getProfileById);
+
 
 export default router;

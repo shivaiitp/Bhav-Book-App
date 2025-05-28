@@ -1,6 +1,8 @@
 import Journal from "../models/journal.model.js";
 import cloudinary from "cloudinary";
 import getDataUri from "../utils/datauri.js";
+import User from "../models/user.model.js";
+import moment from "moment-timezone"; // Install this if not done already
 
 // =================== CREATE JOURNAL ENTRY ===================
 export const createJournalEntry = async (req, res) => {
@@ -31,8 +33,7 @@ export const createJournalEntry = async (req, res) => {
       photoUrl = cloudRes.secure_url;
     }
 
-    
-
+    // Save new journal entry
     const newEntry = new Journal({
       user: userId,
       emotions,
@@ -51,6 +52,35 @@ export const createJournalEntry = async (req, res) => {
 
     await newEntry.save();
 
+    // === Update user profile stats ===
+    const user = await User.findById(userId);
+    const timezone = user.profile?.timezone || "Asia/Kolkata";
+    const today = moment().tz(timezone).startOf("day");
+
+    const lastLogged = user.profile?.lastLoggedDate
+      ? moment(user.profile.lastLoggedDate).tz(timezone).startOf("day")
+      : null;
+
+    let newStreak = 1;
+
+    if (lastLogged) {
+      const diffDays = today.diff(lastLogged, "days");
+
+      if (diffDays === 0) {
+        newStreak = user.profile.streak || 1;
+      } else if (diffDays === 1) {
+        newStreak = (user.profile.streak || 0) + 1;
+      } else {
+        newStreak = 1; // Break in streak
+      }
+    }
+
+    user.profile.entryCount = (user.profile.entryCount || 0) + 1;
+    user.profile.streak = newStreak;
+    user.profile.lastLoggedDate = today.toDate();
+
+    await user.save();
+
     res.status(201).json({
       success: true,
       message: "Journal entry created successfully",
@@ -64,6 +94,7 @@ export const createJournalEntry = async (req, res) => {
     });
   }
 };
+
 
 
 // =================== GET ALL JOURNAL ENTRIES ===================
