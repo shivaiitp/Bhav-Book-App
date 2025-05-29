@@ -4,8 +4,7 @@ import {
 import dotenv from "dotenv";
 dotenv.config();
 
-
-const ai = new GoogleGenAI({ apiKey: "AIzaSyBgrmozTBxU3YuVCk3b06Y8HXfwhtQbRfE" });
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 
 async function main(entryText, imageUrls = null, attachmentUrls = null, isShort = false) {
