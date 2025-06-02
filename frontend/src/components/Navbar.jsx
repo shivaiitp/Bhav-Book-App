@@ -3,25 +3,25 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, Sun, Moon, User, LogOut, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSelector, useDispatch } from 'react-redux';
+import { auth } from '../config/firebase';
 import SearchBox from "./SearchBox";
 import logoDark from "../assets/logo.png";
 import logoLight from "../assets/logo-light.png";
 import { API_BASE_URL } from "../config/api";
-import { logout, verifyToken, setCheckingAuth, setInitialLoadComplete } from '../store/slices/authSlice';
+import { logout, verifyToken, setCheckingAuth, setInitialLoadComplete, setAuthChecked } from '../store/slices/authSlice';
 import { toggleTheme, setTheme } from '../store/slices/themeSlice';
 
 export default function Navbar() {
-  // Redux state
   const dispatch = useDispatch();
   const { 
     isAuthenticated, 
     user, 
     isCheckingAuth, 
-    isInitialLoad 
+    isInitialLoad,
+    hasCheckedAuth
   } = useSelector((state) => state.auth);
   const { darkMode } = useSelector((state) => state.theme);
 
-  // Local state
   const [isOpen, setIsOpen] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -33,7 +33,6 @@ export default function Navbar() {
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
   
-  // Search handler functions
   const handleSearch = async (query) => {
     if (!query.trim()) {
       setSearchResults([]);
@@ -77,7 +76,6 @@ export default function Navbar() {
     navigate(`/profile/${user.id}`);
   };
 
-  // Close search results when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (!event.target.closest('.search-container')) {
@@ -89,29 +87,29 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ✅ FIXED: Handle logout - Immediate reload without state change flash
   const handleLogout = () => {
-    // Clear localStorage first
     localStorage.removeItem('authToken');
+    
+    if (auth.currentUser) {
+      auth.signOut().catch(console.error);
+    }
     setShowDropdown(false);
     
-    // Immediately reload without dispatching Redux action
-    window.location.reload();
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
   };
 
-  // Handle theme toggle
   const handleThemeToggle = () => {
     dispatch(toggleTheme());
   };
 
-  // Handle home click
   const handleHomeClick = (e) => {
     e.preventDefault();
     navigate("/");
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -123,10 +121,8 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ✅ FIXED: Initialize theme and check auth on mount
   useEffect(() => {
     const initializeApp = async () => {
-      // Initialize theme first
       const savedTheme = localStorage.getItem("theme");
       const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
       
@@ -136,27 +132,24 @@ export default function Navbar() {
         dispatch(setTheme(false));
       }
 
-      // Check authentication
-      const token = localStorage.getItem('authToken');
-      if (token) {
-        try {
-          await dispatch(verifyToken()).unwrap();
-        } catch (error) {
-          // Token is invalid, remove it
-          localStorage.removeItem('authToken');
-          dispatch(setInitialLoadComplete());
+      if (!hasCheckedAuth) {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+          try {
+            await dispatch(verifyToken()).unwrap();
+          } catch (error) {
+            localStorage.removeItem('authToken');
+            dispatch(setAuthChecked());
+          }
+        } else {
+          dispatch(setAuthChecked());
         }
-      } else {
-        // No token, complete initial load
-        dispatch(setCheckingAuth(false));
-        dispatch(setInitialLoadComplete());
       }
     };
 
     initializeApp();
-  }, [dispatch]);
+  }, [dispatch, hasCheckedAuth]);
 
-  // Listen for storage changes
   useEffect(() => {
     const handleStorageChange = (e) => {
       if (e.key === "authToken") {
@@ -185,7 +178,6 @@ export default function Navbar() {
     };
   }, [dispatch]);
 
-  // Close mobile menu on route change
   useEffect(() => {
     setIsOpen(false);
   }, [location.pathname]);
@@ -193,13 +185,11 @@ export default function Navbar() {
   const isActive = (path) => location.pathname === path;
   const navBgClass = () => (darkMode ? "bg-gray-900" : "bg-white");
 
-  // ✅ FIXED: Don't render navbar content until initial load is complete
   if (isInitialLoad || isCheckingAuth) {
     return (
       <nav className={`${navBgClass()} fixed top-0 left-0 w-full z-50 py-2 shadow-md shadow-gray-300 dark:shadow-gray-800`}>
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between">
-            {/* Logo */}
             <div className="flex-shrink-0">
               <Link to="/" className="flex items-center space-x-2" aria-label="Homepage">
                 <img
@@ -210,14 +200,12 @@ export default function Navbar() {
               </Link>
             </div>
             
-            {/* Loading placeholder for desktop */}
             <div className="hidden md:flex items-center space-x-4">
               <div className="w-20 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
               <div className="w-16 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
               <div className="w-24 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
             </div>
 
-            {/* Mobile menu placeholder */}
             <div className="md:hidden">
               <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
             </div>
@@ -231,7 +219,6 @@ export default function Navbar() {
     <nav className={`${navBgClass()} fixed top-0 left-0 w-full z-50 py-2 shadow-md shadow-gray-300 dark:shadow-gray-800`}>
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between">
-          {/* Logo */}
           <div className="flex-shrink-0">
             <Link to="/" className="flex items-center space-x-2" aria-label="Homepage">
               <img
@@ -242,7 +229,6 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* Search Box - Fixed Center Position */}
           <div className="hidden md:flex absolute left-1/2 transform -translate-x-1/2 search-container">
             <div className="relative w-80">
               <SearchBox
@@ -253,7 +239,6 @@ export default function Navbar() {
                 darkMode={darkMode}
               />
               
-              {/* Search Results Dropdown */}
               {showSearchResults && (
                 <div className={`absolute top-full left-0 right-0 mt-1 rounded-lg shadow-lg border z-50 max-h-96 overflow-y-auto ${
                   darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
@@ -311,9 +296,7 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-1">
-            {/* Home Link */}
             <button
               onClick={handleHomeClick}
               className={`px-3 py-2 rounded-md font-medium transition-colors duration-200 ${darkMode
@@ -350,7 +333,6 @@ export default function Navbar() {
               {darkMode ? <Sun size={18} /> : <Moon size={18} />}
             </button>
 
-            {/* Authentication Section */}
             {isAuthenticated ? (
               <div className="relative ml-2" ref={dropdownRef}>
                 <button
@@ -422,7 +404,6 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile Menu Toggle */}
           <div className="md:hidden flex items-center space-x-2">
             <button
               onClick={handleThemeToggle}
@@ -467,7 +448,6 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -479,7 +459,6 @@ export default function Navbar() {
               }`}
           >
             <div className="flex flex-col items-start space-y-1 py-2 px-4">
-              {/* Mobile Search */}
               <div className="w-full mb-4 search-container">
                 <SearchBox
                   onSearch={handleSearch}
@@ -489,7 +468,6 @@ export default function Navbar() {
                   darkMode={darkMode}
                 />
                 
-                {/* Mobile Search Results */}
                 {showSearchResults && (
                   <div className={`mt-2 rounded-lg shadow-lg border max-h-64 overflow-y-auto ${
                     darkMode ? "bg-gray-700 border-gray-600" : "bg-white border-gray-200"
@@ -549,7 +527,6 @@ export default function Navbar() {
                 )}
               </div>
 
-              {/* Mobile Home Button */}
               <button
                 onClick={() => {
                   handleHomeClick();

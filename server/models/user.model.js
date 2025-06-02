@@ -4,7 +4,6 @@ const userSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   phone: { type: String, unique: true, sparse: true },
-  username: { type: String, required: true, unique: true, lowercase: true },
 
   firebaseUID: { type: String, unique: true, sparse: true }, 
 

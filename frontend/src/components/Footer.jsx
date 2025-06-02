@@ -20,11 +20,11 @@ function Footer() {
       description: "Your personal journey companion. Capture thoughts, track emotions, and discover insights about yourself through intelligent journaling."
     },
     contact: {
-      email: "support@bhavbook.com",
-      phone: "+1 (234) 567-890",
+      email: "shivaiitp22@gmail.com",
+      phone: "+91 6375919829",
       address: {
-        street: "123 Innovation Street",
-        city: "Tech City, TC 12345"
+        street: "322-D, APJ Kalam Hostel, IIT Patna",
+        city: "Patna, Bihar, IND, 801106"
       }
     },
     socialLinks: {

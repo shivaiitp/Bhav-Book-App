@@ -27,12 +27,19 @@ export const verifyToken = async (req, res) => {
         id: user._id,
         fullName: user.fullName,
         email: user.email,
+        phone: user.phone,
         profile: user.profile,
-        createdAt: user.createdAt,    // <-- Added
-        updatedAt: user.updatedAt,    // <-- Added
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        isPhoneVerified: user.isPhoneVerified || false,
       },
     });
   } catch (err) {
+    if (err.code === 'auth/id-token-expired') {
+      return res.status(401).json({ message: "Token expired", success: false });
+    }
+    
+    console.error("Token verification error:", err);
     res.status(401).json({ message: "Invalid token", success: false });
   }
 };
@@ -50,17 +57,17 @@ export const getUserProfile = async (req, res) => {
 
   const token = authHeader.split(' ')[1];
   
-  const decodedToken = await admin.auth().verifyIdToken(token);
-  const firebaseUid = decodedToken.uid;
-
-  if (!firebaseUid) {
-    return res.status(401).json({
-      success: false,
-      message: "Unauthorized",
-    });
-  }
-
   try {
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    const firebaseUid = decodedToken.uid;
+
+    if (!firebaseUid) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
     const user = await User.findOne({ firebaseUID: firebaseUid.trim() });
 
     if (!user) {
@@ -78,11 +85,20 @@ export const getUserProfile = async (req, res) => {
         phone: user.phone,
         email: user.email,
         profile: user.profile,
-        createdAt: user.createdAt,    // <-- Added
-        updatedAt: user.updatedAt,    // <-- Added
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        isPhoneVerified: user.isPhoneVerified || false,
       },
     });
   } catch (error) {
+    if (error.code === 'auth/id-token-expired') {
+      return res.status(401).json({
+        success: false,
+        message: "Token expired",
+      });
+    }
+    
+    console.error("Get profile error:", error);
     res.status(500).json({
       success: false,
       message: "Server error",
@@ -107,6 +123,9 @@ export const updateUserProfile = async (req, res) => {
   try {
     decodedToken = await admin.auth().verifyIdToken(token);
   } catch (err) {
+    if (err.code === 'auth/id-token-expired') {
+      return res.status(401).json({ message: "Token expired", success: false });
+    }
     return res.status(401).json({ message: "Invalid or expired token", success: false });
   }
   
@@ -123,7 +142,6 @@ export const updateUserProfile = async (req, res) => {
     // Handle different content types
     let profileData;
     if (req.headers['content-type']?.includes('multipart/form-data')) {
-      // FormData structure
       profileData = {
         bio: req.body['profile[bio]'],
         emotionStyle: req.body['profile[emotionStyle]'],
@@ -135,7 +153,6 @@ export const updateUserProfile = async (req, res) => {
         gender: req.body['profile[gender]']
       };
     } else {
-      // JSON structure
       profileData = req.body.profile || {};
     }
 
@@ -144,9 +161,10 @@ export const updateUserProfile = async (req, res) => {
       updateData.displayName = req.body.fullName;
     }
 
+    // Just save phone to database, no Firebase validation
     if (req.body.phone) {
       user.phone = req.body.phone;
-      updateData.phoneNumber = req.body.phone;
+      // Remove this line: updateData.phoneNumber = req.body.phone;
     }
 
     if (req.file) {
@@ -167,6 +185,7 @@ export const updateUserProfile = async (req, res) => {
     if (profileData.timezone) user.profile.timezone = profileData.timezone;
     if (profileData.insightFrequency) user.profile.insightFrequency = profileData.insightFrequency;
 
+    // Only update Firebase if there are non-phone changes
     if (Object.keys(updateData).length > 0) {
       await admin.auth().updateUser(firebaseUid, updateData);
     }
@@ -182,8 +201,9 @@ export const updateUserProfile = async (req, res) => {
         email: user.email,
         phone: user.phone,
         profile: user.profile,
-        createdAt: user.createdAt,    // <-- Added
-        updatedAt: user.updatedAt,    // <-- Added
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        isPhoneVerified: user.isPhoneVerified || false,
       },
     });
   } catch (err) {
@@ -196,9 +216,19 @@ export const updateUserProfile = async (req, res) => {
   }
 };
 
+
 // ==================== CHANGE PASSWORD ====================
 export const changePassword = async (req, res) => {
-  const firebaseUid = req.user?.uid;
+  const authHeader = req.headers['authorization'];
+  
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({
+      message: 'No token provided',
+      success: false,
+    });
+  }
+
+  const token = authHeader.split(' ')[1];
   const { newPassword } = req.body;
 
   if (!newPassword || newPassword.length < 6) {
@@ -209,6 +239,9 @@ export const changePassword = async (req, res) => {
   }
 
   try {
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    const firebaseUid = decodedToken.uid;
+
     await admin.auth().updateUser(firebaseUid, { password: newPassword });
 
     res.status(200).json({
@@ -216,15 +249,39 @@ export const changePassword = async (req, res) => {
       message: "Password updated successfully",
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: "Server error" });
+    if (err.code === 'auth/id-token-expired') {
+      return res.status(401).json({
+        success: false,
+        message: "Token expired",
+      });
+    }
+    
+    console.error("Change password error:", err);
+    res.status(500).json({ 
+      success: false, 
+      message: "Server error",
+      error: err.message 
+    });
   }
 };
 
 // ==================== LOGOUT ====================
 export const logoutUser = async (req, res) => {
-  const firebaseUid = req.user?.uid;
+  const authHeader = req.headers['authorization'];
+  
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({
+      message: 'No token provided',
+      success: false,
+    });
+  }
+
+  const token = authHeader.split(' ')[1];
 
   try {
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    const firebaseUid = decodedToken.uid;
+
     await admin.auth().revokeRefreshTokens(firebaseUid);
 
     res.status(200).json({
@@ -232,16 +289,25 @@ export const logoutUser = async (req, res) => {
       message: "Logged out successfully",
     });
   } catch (error) {
+    if (error.code === 'auth/id-token-expired') {
+      return res.status(401).json({
+        success: false,
+        message: "Token expired",
+      });
+    }
+    
+    console.error("Logout error:", error);
     res.status(500).json({
       success: false,
       message: "Something went wrong during logout",
+      error: error.message
     });
   }
 };
 
 // ==================== GET PROFILE BY ID ====================
 export const getProfileById = async (req, res) => {
-  const { id } = req.params;  // assuming the user ID is passed as a URL param
+  const { id } = req.params;
 
   try {
     const user = await User.findById(id);
@@ -259,16 +325,99 @@ export const getProfileById = async (req, res) => {
         id: user._id,
         fullName: user.fullName,
         email: user.email,
+        phone: user.phone,
         profile: user.profile,
-        createdAt: user.createdAt,    // <-- Added
-        updatedAt: user.updatedAt,    // <-- Added
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        isPhoneVerified: user.isPhoneVerified || false,
       },
     });
   } catch (error) {
+    console.error("Get profile by ID error:", error);
     res.status(500).json({
       success: false,
       message: "Server error",
+      error: error.message
     });
   }
 };
 
+// ==================== REFRESH TOKEN ====================
+export const refreshToken = async (req, res) => {
+  const authHeader = req.headers['authorization'];
+  
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({
+      message: 'No token provided',
+      success: false,
+    });
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  try {
+    // Verify the current token (even if expired)
+    const decodedToken = await admin.auth().verifyIdToken(token, true);
+    const firebaseUid = decodedToken.uid;
+
+    // Create a new custom token
+    const newCustomToken = await admin.auth().createCustomToken(firebaseUid);
+    
+    res.status(200).json({
+      success: true,
+      token: newCustomToken,
+      message: "Token refreshed successfully"
+    });
+  } catch (error) {
+    console.error('Token refresh error:', error);
+    res.status(401).json({
+      success: false,
+      message: "Token refresh failed"
+    });
+  }
+};
+
+// ==================== SEARCH USERS ====================
+export const searchUsers = async (req, res) => {
+  const { q } = req.query;
+
+  if (!q || q.trim().length < 2) {
+    return res.status(400).json({
+      success: false,
+      message: "Query must be at least 2 characters long"
+    });
+  }
+
+  try {
+    const searchQuery = q.trim();
+    const users = await User.find({
+      $or: [
+        { fullName: { $regex: searchQuery, $options: 'i' } },
+        { email: { $regex: searchQuery, $options: 'i' } }
+      ]
+    })
+    .select('_id fullName email profile.avatar')
+    .limit(10);
+
+    const formattedUsers = users.map(user => ({
+      id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      profile: {
+        avatar: user.profile?.avatar || null
+      }
+    }));
+
+    res.status(200).json({
+      success: true,
+      users: formattedUsers
+    });
+  } catch (error) {
+    console.error("Search users error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message
+    });
+  }
+};

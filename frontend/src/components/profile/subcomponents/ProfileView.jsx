@@ -5,6 +5,30 @@ import { ProfileItem, StatCard } from './Items';
 const ProfileView = ({ profile, setIsEditing, isEditing, formData, setFormData, handleSubmit, cancelEdit, isSaving, canEdit = true }) => {
   const { darkMode } = useSelector((state) => state.theme);
 
+  // Popular country codes with India at top
+  const countryCodes = [
+    { code: '+91', country: 'India', flag: '🇮🇳' },
+    { code: '+1', country: 'USA/Canada', flag: '🇺🇸' },
+    { code: '+44', country: 'United Kingdom', flag: '🇬🇧' },
+    { code: '+92', country: 'Pakistan', flag: '🇵🇰' },
+    { code: '+86', country: 'China', flag: '🇨🇳' },
+    { code: '+49', country: 'Germany', flag: '🇩🇪' },
+    { code: '+33', country: 'France', flag: '🇫🇷' },
+    { code: '+81', country: 'Japan', flag: '🇯🇵' },
+    { code: '+61', country: 'Australia', flag: '🇦🇺' },
+    { code: '+7', country: 'Russia', flag: '🇷🇺' },
+    { code: '+55', country: 'Brazil', flag: '🇧🇷' },
+    { code: '+34', country: 'Spain', flag: '🇪🇸' },
+    { code: '+39', country: 'Italy', flag: '🇮🇹' },
+    { code: '+82', country: 'South Korea', flag: '🇰🇷' },
+    { code: '+65', country: 'Singapore', flag: '🇸🇬' },
+    { code: '+971', country: 'UAE', flag: '🇦🇪' },
+    { code: '+966', country: 'Saudi Arabia', flag: '🇸🇦' },
+    { code: '+60', country: 'Malaysia', flag: '🇲🇾' },
+    { code: '+66', country: 'Thailand', flag: '🇹🇭' },
+    { code: '+27', country: 'South Africa', flag: '🇿🇦' }
+  ];
+
   const languages = {
     'en': 'English', 'es': 'Spanish', 'fr': 'French', 'de': 'German',
     'ja': 'Japanese', 'zh': 'Chinese', 'it': 'Italian', 'pt': 'Portuguese',
@@ -51,7 +75,9 @@ const ProfileView = ({ profile, setIsEditing, isEditing, formData, setFormData, 
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (name === 'fullName' || name === 'phone') {
+    if (name === 'fullName') {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    } else if (name === 'phone') {
       setFormData(prev => ({ ...prev, [name]: value }));
     } else {
       setFormData(prev => ({
@@ -62,6 +88,59 @@ const ProfileView = ({ profile, setIsEditing, isEditing, formData, setFormData, 
         }
       }));
     }
+  };
+
+  // Handle phone number input with country code
+  const handlePhoneChange = (e) => {
+    const { value } = e.target;
+    // Only allow numbers, spaces, hyphens, and parentheses
+    const cleanedValue = value.replace(/[^\d\s\-\(\)]/g, '');
+    setFormData(prev => ({ 
+      ...prev, 
+      phoneNumber: cleanedValue 
+    }));
+  };
+
+  // Handle country code change
+  const handleCountryCodeChange = (e) => {
+    const { value } = e.target;
+    setFormData(prev => ({ 
+      ...prev, 
+      countryCode: value 
+    }));
+  };
+
+  // Get current phone parts
+  const getCurrentPhoneParts = () => {
+    const phone = formData.phone || profile.phone || '';
+    
+    // Check if phone already has country code
+    const countryCode = countryCodes.find(cc => phone.startsWith(cc.code));
+    if (countryCode) {
+      return {
+        countryCode: countryCode.code,
+        phoneNumber: phone.substring(countryCode.code.length).trim()
+      };
+    }
+    
+    // Default to India if no country code found
+    return {
+      countryCode: formData.countryCode || '+91',
+      phoneNumber: formData.phoneNumber || phone
+    };
+  };
+
+  const { countryCode, phoneNumber } = getCurrentPhoneParts();
+
+  // Update complete phone number when country code or number changes
+  const updateCompletePhone = (newCountryCode, newPhoneNumber) => {
+    const completePhone = newCountryCode + newPhoneNumber;
+    setFormData(prev => ({ 
+      ...prev, 
+      phone: completePhone,
+      countryCode: newCountryCode,
+      phoneNumber: newPhoneNumber
+    }));
   };
 
   return (
@@ -75,7 +154,7 @@ const ProfileView = ({ profile, setIsEditing, isEditing, formData, setFormData, 
               value={formData.fullName || ""}
               onChange={handleInputChange}
               className="text-3xl font-bold text-slate-800 dark:text-blue-100 bg-transparent border-b-2 border-blue-500 focus:outline-none focus:border-blue-600 mb-2"
-              placeholder="Your Full Name"
+              placeholder="Your Name"
               required
             />
           ) : (
@@ -93,17 +172,32 @@ const ProfileView = ({ profile, setIsEditing, isEditing, formData, setFormData, 
           </div>
 
           {isEditing && canEdit ? (
-            <div className="mt-2">
+            <div className="mt-2 flex items-center space-x-2">
+              {/* Country Code Selector */}
+              <select
+                value={countryCode}
+                onChange={(e) => updateCompletePhone(e.target.value, phoneNumber)}
+                className="text-sm text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded focus:outline-none focus:border-blue-500 px-2 py-1"
+              >
+                {countryCodes.map((cc) => (
+                  <option key={cc.code} value={cc.code}>
+                    {cc.flag} {cc.code} {cc.country}
+                  </option>
+                ))}
+              </select>
+              
+              {/* Phone Number Input */}
               <input
                 type="tel"
-                name="phone"
-                value={formData.phone || ""}
-                onChange={handleInputChange}
-                className="text-sm text-slate-600 dark:text-slate-300 bg-transparent border-b border-slate-300 dark:border-slate-600 focus:outline-none focus:border-blue-500"
-                placeholder="Phone number (optional)"
+                value={phoneNumber}
+                onChange={(e) => updateCompletePhone(countryCode, e.target.value)}
+                className="flex-1 text-sm text-slate-600 dark:text-slate-300 bg-transparent border-b border-slate-300 dark:border-slate-600 focus:outline-none focus:border-blue-500 px-2 py-1"
+                placeholder="Enter phone number"
+                maxLength="15"
               />
+              
               {profile.isPhoneVerified && (
-                <span className="ml-2 text-xs text-green-600 dark:text-green-400">✓ Verified</span>
+                <span className="text-xs text-green-600 dark:text-green-400">✓ Verified</span>
               )}
             </div>
           ) : (
@@ -117,9 +211,7 @@ const ProfileView = ({ profile, setIsEditing, isEditing, formData, setFormData, 
             )
           )}
 
-          {/* Date of Birth and Gender fields */}
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Date of Birth */}
             <div className="flex items-center space-x-3">
               <div className="flex-shrink-0 rounded-full p-1.5 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -152,7 +244,6 @@ const ProfileView = ({ profile, setIsEditing, isEditing, formData, setFormData, 
               </div>
             </div>
             
-            {/* Gender */}
             <div className="flex items-center space-x-3">
               <div className="flex-shrink-0 rounded-full p-1.5 bg-pink-50 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">

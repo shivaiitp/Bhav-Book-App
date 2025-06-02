@@ -1,4 +1,3 @@
-// src/store/slices/profileSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { API_BASE_URL } from '../../config/api';
 
@@ -41,6 +40,7 @@ const profileSlice = createSlice({
     loading: false,
     error: null,
     updateSuccess: false,
+    profileData: null,
   },
   reducers: {
     clearUpdateSuccess: (state) => {
@@ -48,6 +48,9 @@ const profileSlice = createSlice({
     },
     clearError: (state) => {
       state.error = null;
+    },
+    setProfileData: (state, action) => {
+      state.profileData = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -57,16 +60,23 @@ const profileSlice = createSlice({
         state.error = null;
         state.updateSuccess = false;
       })
-      .addCase(updateProfile.fulfilled, (state) => {
+      .addCase(updateProfile.fulfilled, (state, action) => {
         state.loading = false;
         state.updateSuccess = true;
+        state.profileData = action.payload;
+        
+        const currentToken = localStorage.getItem('authToken');
+        if (currentToken) {
+          localStorage.setItem('userProfile', JSON.stringify(action.payload));
+        }
       })
       .addCase(updateProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+        state.updateSuccess = false;
       });
   },
 });
 
-export const { clearUpdateSuccess, clearError } = profileSlice.actions;
+export const { clearUpdateSuccess, clearError, setProfileData } = profileSlice.actions;
 export default profileSlice.reducer;

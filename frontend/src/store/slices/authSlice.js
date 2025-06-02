@@ -1,9 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { API_BASE_URL } from '../../config/api';
 
-// Async Thunks for API calls
-
-// Login user
 export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async (credentials, { rejectWithValue }) => {
@@ -20,8 +17,6 @@ export const loginUser = createAsyncThunk(
       }
       
       const data = await response.json();
-      
-      // Store token in localStorage
       localStorage.setItem('authToken', data.token);
       
       return data;
@@ -31,7 +26,6 @@ export const loginUser = createAsyncThunk(
   }
 );
 
-// Verify token and get user profile
 export const verifyToken = createAsyncThunk(
   'auth/verifyToken',
   async (_, { rejectWithValue }) => {
@@ -63,7 +57,6 @@ export const verifyToken = createAsyncThunk(
   }
 );
 
-// Register user
 export const registerUser = createAsyncThunk(
   'auth/registerUser',
   async (userData, { rejectWithValue }) => {
@@ -80,8 +73,6 @@ export const registerUser = createAsyncThunk(
       }
       
       const data = await response.json();
-      
-      // Store token in localStorage
       localStorage.setItem('authToken', data.token);
       
       return data;
@@ -91,7 +82,6 @@ export const registerUser = createAsyncThunk(
   }
 );
 
-// Google Auth
 export const googleAuth = createAsyncThunk(
   'auth/googleAuth',
   async (idToken, { rejectWithValue }) => {
@@ -117,7 +107,56 @@ export const googleAuth = createAsyncThunk(
   }
 );
 
-// Initial state
+export const refreshFirebaseToken = createAsyncThunk(
+  'auth/refreshFirebaseToken',
+  async (_, { rejectWithValue }) => {
+    try {
+      const { auth } = await import('../../config/firebase');
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        throw new Error('No user logged in');
+      }
+
+      const newToken = await currentUser.getIdToken(true);
+      localStorage.setItem('authToken', newToken);
+      
+      return { token: newToken };
+    } catch (error) {
+      localStorage.removeItem('authToken');
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const checkTokenExpiration = createAsyncThunk(
+  'auth/checkTokenExpiration',
+  async (_, { dispatch, getState }) => {
+    const { auth: authState } = getState();
+    
+    if (!authState.isAuthenticated) {
+      return;
+    }
+
+    try {
+      const { auth } = await import('../../config/firebase');
+      if (!auth.currentUser) {
+        return;
+      }
+
+      const token = await auth.currentUser.getIdToken();
+      const currentToken = localStorage.getItem('authToken');
+      
+      if (token !== currentToken) {
+        localStorage.setItem('authToken', token);
+        return { token };
+      }
+    } catch (error) {
+      console.error('Token check failed:', error);
+      dispatch(logout());
+    }
+  }
+);
+
 const initialState = {
   user: null,
   token: localStorage.getItem('authToken'),
@@ -126,16 +165,15 @@ const initialState = {
   error: null,
   isCheckingAuth: true,
   isInitialLoad: true,
+  hasCheckedAuth: false,
   loginSuccess: false,
   registerSuccess: false,
 };
 
-// Auth Slice
 const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    // Logout action
     logout: (state) => {
       state.user = null;
       state.token = null;
@@ -143,48 +181,65 @@ const authSlice = createSlice({
       state.error = null;
       state.loginSuccess = false;
       state.registerSuccess = false;
-      state.isInitialLoad = false;
+      state.isInitialLoad = true;
+      state.isCheckingAuth = true;
+      state.hasCheckedAuth = false;
       localStorage.removeItem('authToken');
+      localStorage.removeItem('userProfile');
       
-      // Dispatch custom event to notify other parts of app
       window.dispatchEvent(new CustomEvent('authChanged'));
     },
     
-    // Clear error
     clearError: (state) => {
       state.error = null;
     },
     
-    // Clear success flags
     clearSuccess: (state) => {
       state.loginSuccess = false;
       state.registerSuccess = false;
     },
     
-    // Set credentials (for manual token setting)
     setCredentials: (state, action) => {
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.isAuthenticated = true;
       state.isCheckingAuth = false;
       state.isInitialLoad = false;
+      state.hasCheckedAuth = true;
     },
     
-    // Set checking auth state
     setCheckingAuth: (state, action) => {
       state.isCheckingAuth = action.payload;
     },
     
-    // Set initial load complete
     setInitialLoadComplete: (state) => {
       state.isInitialLoad = false;
       state.isCheckingAuth = false;
+    },
+
+    setAuthChecked: (state) => {
+      state.hasCheckedAuth = true;
+      state.isCheckingAuth = false;
+      state.isInitialLoad = false;
+    },
+
+    updateUserProfile: (state, action) => {
+      if (state.user) {
+        state.user = {
+          ...state.user,
+          ...action.payload,
+          profile: {
+            ...state.user.profile,
+            ...action.payload.profile
+          }
+        };
+        localStorage.setItem('userProfile', JSON.stringify(state.user));
+      }
     },
   },
   
   extraReducers: (builder) => {
     builder
-      // ✅ FIXED: Login cases - Don't set isAuthenticated immediately
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -192,12 +247,10 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
-        // ✅ Store user data but DON'T set isAuthenticated
         state.user = action.payload.user;
         state.token = action.payload.token;
-        // state.isAuthenticated = true; // ❌ REMOVED - causes flickering
         state.loginSuccess = true;
-        // Don't change isCheckingAuth or isInitialLoad - let page reload handle it
+        state.hasCheckedAuth = true;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
@@ -205,9 +258,9 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.loginSuccess = false;
         state.isInitialLoad = false;
+        state.hasCheckedAuth = true;
       })
       
-      // ✅ FIXED: Register cases - Don't set isAuthenticated immediately
       .addCase(registerUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -215,12 +268,10 @@ const authSlice = createSlice({
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
-        // ✅ Store user data but DON'T set isAuthenticated
         state.user = action.payload.user;
         state.token = action.payload.token;
-        // state.isAuthenticated = true; // ❌ REMOVED - causes flickering
         state.registerSuccess = true;
-        // Don't change isCheckingAuth or isInitialLoad - let page reload handle it
+        state.hasCheckedAuth = true;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
@@ -228,18 +279,20 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.registerSuccess = false;
         state.isInitialLoad = false;
+        state.hasCheckedAuth = true;
       })
       
-      // ✅ ONLY set isAuthenticated in verifyToken.fulfilled (after page reload)
       .addCase(verifyToken.pending, (state) => {
         state.isCheckingAuth = true;
         state.error = null;
       })
       .addCase(verifyToken.fulfilled, (state, action) => {
         state.user = action.payload;
-        state.isAuthenticated = true; // ✅ Only set here after verification
+        state.isAuthenticated = true;
         state.isCheckingAuth = false;
         state.isInitialLoad = false;
+        state.hasCheckedAuth = true;
+        localStorage.setItem('userProfile', JSON.stringify(action.payload));
       })
       .addCase(verifyToken.rejected, (state, action) => {
         state.user = null;
@@ -247,39 +300,53 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.isCheckingAuth = false;
         state.isInitialLoad = false;
+        state.hasCheckedAuth = true;
         state.error = action.payload;
       })
       
-      // ✅ FIXED: Google Auth cases - Don't set isAuthenticated immediately
       .addCase(googleAuth.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(googleAuth.fulfilled, (state, action) => {
         state.loading = false;
-        // ✅ Store user data but DON'T set isAuthenticated
         state.user = action.payload;
-        // state.isAuthenticated = true; // ❌ REMOVED - causes flickering
-        // Don't change isCheckingAuth or isInitialLoad - let page reload handle it
+        state.hasCheckedAuth = true;
       })
       .addCase(googleAuth.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
         state.isAuthenticated = false;
         state.isInitialLoad = false;
+        state.hasCheckedAuth = true;
+      })
+      
+      .addCase(refreshFirebaseToken.fulfilled, (state, action) => {
+        state.token = action.payload.token;
+      })
+      .addCase(refreshFirebaseToken.rejected, (state) => {
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
+      })
+      
+      .addCase(checkTokenExpiration.fulfilled, (state, action) => {
+        if (action.payload?.token) {
+          state.token = action.payload.token;
+        }
       });
   },
 });
 
-// Export actions
 export const { 
   logout, 
   clearError, 
   clearSuccess, 
   setCredentials, 
   setCheckingAuth,
-  setInitialLoadComplete
+  setInitialLoadComplete,
+  setAuthChecked,
+  updateUserProfile
 } = authSlice.actions;
 
-// Export reducer
 export default authSlice.reducer;

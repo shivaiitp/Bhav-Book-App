@@ -5,15 +5,15 @@ import ProfileView from "./subcomponents/ProfileView";
 import LoadingState from "./subcomponents/ProfileLoadingState";
 import { ErrorState, StatusAlert } from "./subcomponents/StatusError";
 import { updateProfile, clearUpdateSuccess } from '../../store/slices/profileSlice';
+import { updateUserProfile, verifyToken } from '../../store/slices/authSlice';
+import { API_BASE_URL } from '../../config/api';
 
 export default function ProfileCard({ profile: externalProfile, isOwnProfile = true }) {
-  // Redux state
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { darkMode } = useSelector((state) => state.theme);
-  const { loading: profileLoading, updateSuccess, error: profileError } = useSelector((state) => state.profile);
+  const { loading: profileLoading, updateSuccess, error: profileError, profileData } = useSelector((state) => state.profile);
 
-  // Local state
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -21,10 +21,43 @@ export default function ProfileCard({ profile: externalProfile, isOwnProfile = t
   const [formData, setFormData] = useState({});
   const [updateStatus, setUpdateStatus] = useState({ message: "", type: "" });
   const [photoPreview, setPhotoPreview] = useState(null);
+  const [renderKey, setRenderKey] = useState(0);
+
+  // Check for success message from localStorage on component mount
+  useEffect(() => {
+    const successMessage = localStorage.getItem('profileUpdateSuccess');
+    if (successMessage) {
+      setUpdateStatus({ message: successMessage, type: "success" });
+      localStorage.removeItem('profileUpdateSuccess');
+      
+      setTimeout(() => {
+        setUpdateStatus({ message: "", type: "" });
+      }, 5000);
+    }
+  }, []);
+
+  const fetchFreshProfileData = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        return data.user;
+      }
+    } catch (error) {
+      console.error('Error fetching fresh profile:', error);
+    }
+    return null;
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
-      // If external profile is provided, use it (for viewing other users)
       if (externalProfile) {
         setProfile(externalProfile);
         setFormData({
@@ -47,23 +80,23 @@ export default function ProfileCard({ profile: externalProfile, isOwnProfile = t
         return;
       }
 
-      // Use Redux user data if available
-      if (user) {
-        setProfile(user);
+      const currentProfile = profileData || user;
+      if (currentProfile) {
+        setProfile(currentProfile);
         setFormData({
-          fullName: user.fullName || "",
-          email: user.email || "",
-          phone: user.phone || "",
+          fullName: currentProfile.fullName || "",
+          email: currentProfile.email || "",
+          phone: currentProfile.phone || "",
           profile: {
-            bio: user.profile?.bio || "",
-            emotionStyle: user.profile?.emotionStyle || "emoji",
-            language: user.profile?.language || "en",
-            tone: user.profile?.tone || "neutral",
-            timezone: user.profile?.timezone || "",
-            insightFrequency: user.profile?.insightFrequency || "weekly",
-            avatar: user.profile?.avatar || null,
-            dob: user.profile?.dob || "",
-            gender: user.profile?.gender || ""
+            bio: currentProfile.profile?.bio || "",
+            emotionStyle: currentProfile.profile?.emotionStyle || "emoji",
+            language: currentProfile.profile?.language || "en",
+            tone: currentProfile.profile?.tone || "neutral",
+            timezone: currentProfile.profile?.timezone || "",
+            insightFrequency: currentProfile.profile?.insightFrequency || "weekly",
+            avatar: currentProfile.profile?.avatar || null,
+            dob: currentProfile.profile?.dob || "",
+            gender: currentProfile.profile?.gender || ""
           },
         });
         setLoading(false);
@@ -74,23 +107,21 @@ export default function ProfileCard({ profile: externalProfile, isOwnProfile = t
     };
 
     fetchProfile();
-  }, [externalProfile, user]);
+  }, [externalProfile, user, profileData]);
 
-  // Handle Redux update success
   useEffect(() => {
     if (updateSuccess) {
-      setUpdateStatus({ message: "Profile updated successfully!", type: "success" });
-      setIsEditing(false);
-      setPhotoPreview(null);
+      // Store success message in localStorage before reload
+      localStorage.setItem('profileUpdateSuccess', 'Profile updated successfully!');
       
-      setTimeout(() => {
-        setUpdateStatus({ message: "", type: "" });
-        dispatch(clearUpdateSuccess());
-      }, 5000);
+      // Clear Redux success state
+      dispatch(clearUpdateSuccess());
+      
+      // Reload the page
+      window.location.reload();
     }
   }, [updateSuccess, dispatch]);
 
-  // Handle Redux profile error
   useEffect(() => {
     if (profileError) {
       setUpdateStatus({ message: profileError, type: "error" });
@@ -121,24 +152,32 @@ export default function ProfileCard({ profile: externalProfile, isOwnProfile = t
       }
     };
 
-    // If there's a file upload, handle it separately
-    if (formData.profile.avatar instanceof File) {
-      const formDataToSend = new FormData();
-      formDataToSend.append('fullName', updateData.fullName);
-      formDataToSend.append('phone', updateData.phone);
-      formDataToSend.append('profile[bio]', updateData.profile.bio);
-      formDataToSend.append('profile[emotionStyle]', updateData.profile.emotionStyle);
-      formDataToSend.append('profile[language]', updateData.profile.language);
-      formDataToSend.append('profile[tone]', updateData.profile.tone);
-      formDataToSend.append('profile[timezone]', updateData.profile.timezone);
-      formDataToSend.append('profile[insightFrequency]', updateData.profile.insightFrequency);
-      formDataToSend.append('profile[dob]', updateData.profile.dob);
-      formDataToSend.append('profile[gender]', updateData.profile.gender);
-      formDataToSend.append('avatar', formData.profile.avatar);
+    try {
+      let result;
       
-      dispatch(updateProfile({ data: formDataToSend, isFormData: true }));
-    } else {
-      dispatch(updateProfile({ data: updateData, isFormData: false }));
+      if (formData.profile.avatar instanceof File) {
+        const formDataToSend = new FormData();
+        formDataToSend.append('fullName', updateData.fullName);
+        formDataToSend.append('phone', updateData.phone);
+        formDataToSend.append('profile[bio]', updateData.profile.bio);
+        formDataToSend.append('profile[emotionStyle]', updateData.profile.emotionStyle);
+        formDataToSend.append('profile[language]', updateData.profile.language);
+        formDataToSend.append('profile[tone]', updateData.profile.tone);
+        formDataToSend.append('profile[timezone]', updateData.profile.timezone);
+        formDataToSend.append('profile[insightFrequency]', updateData.profile.insightFrequency);
+        formDataToSend.append('profile[dob]', updateData.profile.dob);
+        formDataToSend.append('profile[gender]', updateData.profile.gender);
+        formDataToSend.append('avatar', formData.profile.avatar);
+        
+        result = await dispatch(updateProfile({ data: formDataToSend, isFormData: true }));
+      } else {
+        result = await dispatch(updateProfile({ data: updateData, isFormData: false }));
+      }
+      
+      // The page reload will happen in the updateSuccess useEffect
+    } catch (error) {
+      console.error('Profile update error:', error);
+      setUpdateStatus({ message: "Failed to update profile", type: "error" });
     }
   };
 
@@ -180,7 +219,7 @@ export default function ProfileCard({ profile: externalProfile, isOwnProfile = t
   if (error) return <ErrorState error={error} />;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-6 pb-10 mt-16">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-6 pb-10 mt-16" key={renderKey}>
       {updateStatus.message && <StatusAlert status={updateStatus} />}
 
       <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl overflow-hidden">
