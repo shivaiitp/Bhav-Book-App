@@ -1,6 +1,6 @@
 import admin from "firebase-admin";
 import User from "../models/user.model.js";
-import cloudinary from "cloudinary";
+import cloudinary from "../utils/cloudinary.js";
 import getDataUri from "../utils/datauri.js";
 
 // ==================== VERIFY TOKEN ====================
@@ -161,16 +161,36 @@ export const updateUserProfile = async (req, res) => {
       updateData.displayName = req.body.fullName;
     }
 
-    // Just save phone to database, no Firebase validation
     if (req.body.phone) {
       user.phone = req.body.phone;
-      // Remove this line: updateData.phoneNumber = req.body.phone;
     }
 
+    // Handle image upload
     if (req.file) {
-      const avatarUri = getDataUri(req.file);
-      const cloudResponse = await cloudinary.uploader.upload(avatarUri.content);
-      user.profile.avatar = cloudResponse.secure_url;
+      try {
+        console.log('File received:', req.file);
+        const avatarUri = getDataUri(req.file);
+        console.log('Data URI created:', avatarUri ? 'Success' : 'Failed');
+        
+        const cloudResponse = await cloudinary.uploader.upload(avatarUri.content, {
+          folder: "profile_pictures",
+          resource_type: "image",
+          transformation: [
+            { width: 400, height: 400, crop: "fill" },
+            { quality: "auto" }
+          ]
+        });
+        
+        console.log('Cloudinary response:', cloudResponse);
+        user.profile.avatar = cloudResponse.secure_url;
+      } catch (uploadError) {
+        console.error('Cloudinary upload error:', uploadError);
+        return res.status(500).json({ 
+          message: "Failed to upload image", 
+          success: false,
+          error: uploadError.message 
+        });
+      }
     }
 
     // Update profile fields
@@ -215,7 +235,6 @@ export const updateUserProfile = async (req, res) => {
     });
   }
 };
-
 
 // ==================== CHANGE PASSWORD ====================
 export const changePassword = async (req, res) => {
@@ -338,41 +357,6 @@ export const getProfileById = async (req, res) => {
       success: false,
       message: "Server error",
       error: error.message
-    });
-  }
-};
-
-// ==================== REFRESH TOKEN ====================
-export const refreshToken = async (req, res) => {
-  const authHeader = req.headers['authorization'];
-  
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({
-      message: 'No token provided',
-      success: false,
-    });
-  }
-
-  const token = authHeader.split(' ')[1];
-
-  try {
-    // Verify the current token (even if expired)
-    const decodedToken = await admin.auth().verifyIdToken(token, true);
-    const firebaseUid = decodedToken.uid;
-
-    // Create a new custom token
-    const newCustomToken = await admin.auth().createCustomToken(firebaseUid);
-    
-    res.status(200).json({
-      success: true,
-      token: newCustomToken,
-      message: "Token refreshed successfully"
-    });
-  } catch (error) {
-    console.error('Token refresh error:', error);
-    res.status(401).json({
-      success: false,
-      message: "Token refresh failed"
     });
   }
 };

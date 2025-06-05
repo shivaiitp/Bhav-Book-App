@@ -29,7 +29,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/auth/firebase", firebaseAuthRoutes);
 
-app.use("/api/journals", journalRoutes);
+app.use("/api/journal", journalRoutes);
 app.use("/api/insights", insightRoutes);
 
 app.use('/api/search', searchRoutes);

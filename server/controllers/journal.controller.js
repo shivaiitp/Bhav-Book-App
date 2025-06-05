@@ -15,7 +15,6 @@ export const createJournalEntry = async (req, res) => {
       location,
       moodRating,
       sentiment,
-      reminderTime,
       entryType,
       weather,
       insights,
@@ -43,7 +42,6 @@ export const createJournalEntry = async (req, res) => {
       location,
       moodRating,
       sentiment,
-      reminderTime,
       entryType,
       weather,
       insights,
@@ -185,7 +183,6 @@ export const updateJournalEntry = async (req, res) => {
       location,
       moodRating,
       sentiment,
-      reminderTime,
       entryType,
       weather,
       insights,
@@ -226,7 +223,6 @@ export const updateJournalEntry = async (req, res) => {
     if (location) entry.location = location;
     if (moodRating) entry.moodRating = moodRating;
     if (sentiment) entry.sentiment = sentiment;
-    if (reminderTime) entry.reminderTime = reminderTime;
     if (entryType) entry.entryType = entryType;
     if (weather) entry.weather = weather;
     if (insights) entry.insights = insights;

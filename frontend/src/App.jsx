@@ -9,6 +9,7 @@ import AuthPage from "./components/pages/AuthPage";
 import ProfilePage from "./components/pages/ProfilePage";
 import Footer from "./components/Footer";
 import AppLoader from "./components/AppLoader";
+import Journal from "./components/journal/Journal";
 import { refreshFirebaseToken, checkTokenExpiration, setCredentials, logout } from './store/slices/authSlice';
 import { API_BASE_URL } from './config/api';
 
@@ -120,6 +121,7 @@ function AppContent() {
         <Route path="/auth/:authType" element={<AuthPage />} />
         <Route path="/profile" element={<ProfilePage />} /> 
         <Route path="/profile/:id" element={<ProfilePage />} />
+        <Route path="/journal" element={<Journal/>} />
       </Routes>
       {!isProfilePage && <Footer />}
     </div>

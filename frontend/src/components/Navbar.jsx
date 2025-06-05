@@ -28,15 +28,18 @@ export default function Navbar() {
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
   const location = useLocation();
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
+  const inputRef = useRef(null);
   
   const handleSearch = async (query) => {
     if (!query.trim()) {
       setSearchResults([]);
       setShowSearchResults(false);
+      setHighlightedIndex(-1);
       return;
     }
 
@@ -48,10 +51,12 @@ export default function Navbar() {
       if (response.ok) {
         setSearchResults(data.users || []);
         setShowSearchResults(true);
+        setHighlightedIndex(-1);
       }
     } catch (error) {
       console.error("Search error:", error);
       setSearchResults([]);
+      setHighlightedIndex(-1);
     }
     setSearchLoading(false);
   };
@@ -66,6 +71,7 @@ export default function Navbar() {
       } else {
         setSearchResults([]);
         setShowSearchResults(false);
+        setHighlightedIndex(-1);
       }
     }, 300);
   };
@@ -73,13 +79,46 @@ export default function Navbar() {
   const handleSelectUser = (user) => {
     setShowSearchResults(false);
     setSearchQuery("");
+    setHighlightedIndex(-1);
     navigate(`/profile/${user.id}`);
   };
+
+  const handleKeyDown = (e) => {
+    if (!showSearchResults || searchResults.length === 0) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlightedIndex((prev) =>
+        prev < searchResults.length - 1 ? prev + 1 : 0
+      );
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlightedIndex((prev) =>
+        prev > 0 ? prev - 1 : searchResults.length - 1
+      );
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (highlightedIndex >= 0 && highlightedIndex < searchResults.length) {
+        handleSelectUser(searchResults[highlightedIndex]);
+      }
+    } else if (e.key === "Escape") {
+      setShowSearchResults(false);
+      setHighlightedIndex(-1);
+      if (inputRef.current) {
+        inputRef.current.blur();
+      }
+    }
+  };
+
+  useEffect(() => {
+    setHighlightedIndex(-1);
+  }, [searchResults]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (!event.target.closest('.search-container')) {
         setShowSearchResults(false);
+        setHighlightedIndex(-1);
       }
     };
 
@@ -237,6 +276,8 @@ export default function Navbar() {
                 placeholder="Search users by name or email..."
                 value={searchQuery}
                 darkMode={darkMode}
+                onKeyDown={handleKeyDown}
+                inputRef={inputRef}
               />
               
               {showSearchResults && (
@@ -252,13 +293,16 @@ export default function Navbar() {
                     </div>
                   ) : searchResults.length > 0 ? (
                     <div className="py-2">
-                      {searchResults.map((user) => (
+                      {searchResults.map((user, idx) => (
                         <button
                           key={user.id}
                           onClick={() => handleSelectUser(user)}
-                          className={`w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center space-x-3 transition-colors ${
-                            darkMode ? "text-gray-300" : "text-gray-700"
-                          }`}
+                          onMouseEnter={() => setHighlightedIndex(idx)}
+                          className={`w-full text-left px-4 py-3 flex items-center space-x-3 transition-colors ${
+                            highlightedIndex === idx
+                              ? "bg-sky-100 dark:bg-sky-700"
+                              : "hover:bg-gray-50 dark:hover:bg-gray-700"
+                          } ${darkMode ? "text-gray-300" : "text-gray-700"}`}
                         >
                           <div className="flex-shrink-0">
                             {user.profile?.avatar ? (
@@ -466,6 +510,8 @@ export default function Navbar() {
                   placeholder="Search users..."
                   value={searchQuery}
                   darkMode={darkMode}
+                  onKeyDown={handleKeyDown}
+                  inputRef={inputRef}
                 />
                 
                 {showSearchResults && (
@@ -481,16 +527,19 @@ export default function Navbar() {
                       </div>
                     ) : searchResults.length > 0 ? (
                       <div className="py-1">
-                        {searchResults.map((user) => (
+                        {searchResults.map((user, idx) => (
                           <button
                             key={user.id}
                             onClick={() => {
                               handleSelectUser(user);
                               setIsOpen(false);
                             }}
-                            className={`w-full text-left px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center space-x-2 transition-colors ${
-                              darkMode ? "text-gray-300" : "text-gray-700"
-                            }`}
+                            onMouseEnter={() => setHighlightedIndex(idx)}
+                            className={`w-full text-left px-3 py-2 flex items-center space-x-2 transition-colors ${
+                              highlightedIndex === idx
+                                ? "bg-sky-100 dark:bg-sky-700"
+                                : "hover:bg-gray-50 dark:hover:bg-gray-600"
+                            } ${darkMode ? "text-gray-300" : "text-gray-700"}`}
                           >
                             <div className="flex-shrink-0">
                               {user.profile?.avatar ? (

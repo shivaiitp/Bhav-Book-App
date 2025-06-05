@@ -1,8 +1,15 @@
-// SearchBox.jsx
 import React, { useState } from "react";
 import { FaSearch } from "react-icons/fa";
 
-const SearchBox = ({ onSearch, onInputChange, placeholder = "Search...", value, darkMode }) => {
+const SearchBox = ({
+  onSearch,
+  onInputChange,
+  placeholder = "Search...",
+  value,
+  darkMode,
+  onKeyDown,
+  inputRef
+}) => {
   const [isFocused, setIsFocused] = useState(false);
 
   const handleInput = (e) => {
@@ -14,14 +21,8 @@ const SearchBox = ({ onSearch, onInputChange, placeholder = "Search...", value, 
     if (onSearch) onSearch(value);
   };
 
-  const handleFocus = () => {
-    setIsFocused(true);
-  };
-
-  const handleBlur = () => {
-    setIsFocused(false);
-  };
-
+  const handleFocus = () => setIsFocused(true);
+  const handleBlur = () => setIsFocused(false);
   const isActive = isFocused || (value && value.length > 0);
 
   return (
@@ -47,6 +48,7 @@ const SearchBox = ({ onSearch, onInputChange, placeholder = "Search...", value, 
         <FaSearch size={16} />
       </button>
       <input
+        ref={inputRef}
         type="text"
         className={`ml-3 flex-1 border-none outline-none bg-transparent ${
           darkMode ? "text-gray-200 placeholder-gray-300" : "text-gray-800 placeholder-gray-400"
@@ -57,6 +59,8 @@ const SearchBox = ({ onSearch, onInputChange, placeholder = "Search...", value, 
         onFocus={handleFocus}
         onBlur={handleBlur}
         aria-label="Search input"
+        onKeyDown={onKeyDown}
+        autoComplete="off"
       />
     </form>
   );

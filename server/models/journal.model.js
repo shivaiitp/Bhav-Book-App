@@ -15,7 +15,6 @@ const journalSchema = new mongoose.Schema(
     location: { type: String }, // Location where the entry was created
     moodRating: { type: Number, min: 1, max: 10 }, // Mood rating from 1 to 10
     sentiment: { type: String, enum: ['positive', 'neutral', 'negative'] }, // Sentiment analysis
-    reminderTime: { type: Date }, // Time for reminder to write the entry
     entryType: { type: String, enum: ['gratitude', 'reflection', 'dream', 'daily'] }, // Type of entry
     attachment: { type: String }, // URL of attachment (media, file)
     weather: { type: String }, // Weather at the time of entry

@@ -1,48 +1,50 @@
 // src/components/Hero.jsx
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 export default function Hero() {
   const [isVisible, setIsVisible] = useState(false);
   const [currentQuote, setCurrentQuote] = useState(0);
+  const navigate = useNavigate();
+  const { isAuthenticated } = useSelector((state) => state.auth);
   
   const inspirationalQuotes = [
-  "Write the truth, even if your hand trembles.",
-  "Write freely — we'll help you understand what your heart is really saying.",
-  "Every word written is a step toward clarity.",
-  "Your journal speaks. Our insights help you listen.",
-  "Reflect. Release. Renew.",
-  "Today's journal entry is tomorrow's reflection.",
-  "Let your emotions breathe through your pen.",
-  "Even messy thoughts deserve the page.",
-  "Jot it down. We'll help you make sense of it.",
-  "One sentence today can heal a thousand tomorrows.",
-  "Your journal is a mirror—look closely.",
-  "Your reflections deserve understanding — that's where we come in.",
-  "Your story matters. Write it.",
-  "You write the thoughts, we reflect the feelings.",
-  "Your words hold patterns. We help you uncover them.",
-  "Behind every entry lies a story—we help bring it to light.",
-  "In the quiet of journaling, you meet yourself.",
-  "Let the ink reveal what the heart hides.",
-  "Your words are seeds. Plant them with purpose.",
-  "We read between the lines so you can see within.",
-  "Capture moments. Create memories.",
-  "In stillness, your thoughts find a voice.",
-  "Pen what you can't say out loud.",
-  "A journal doesn't judge, it listens.",
-  "The blank page is a canvas for your thoughts.",
-  "Let your mind speak; we'll translate the emotion behind it.",
-  "Write to understand, not to impress.",
-  "Thoughts unspoken often carry the most meaning — we help you find it.",
-  "Each page is progress, not perfection."
-];
+    "Write the truth, even if your hand trembles.",
+    "Write freely — we'll help you understand what your heart is really saying.",
+    "Every word written is a step toward clarity.",
+    "Your journal speaks. Our insights help you listen.",
+    "Reflect. Release. Renew.",
+    "Today's journal entry is tomorrow's reflection.",
+    "Let your emotions breathe through your pen.",
+    "Even messy thoughts deserve the page.",
+    "Jot it down. We'll help you make sense of it.",
+    "One sentence today can heal a thousand tomorrows.",
+    "Your journal is a mirror—look closely.",
+    "Your reflections deserve understanding — that's where we come in.",
+    "Your story matters. Write it.",
+    "You write the thoughts, we reflect the feelings.",
+    "Your words hold patterns. We help you uncover them.",
+    "Behind every entry lies a story—we help bring it to light.",
+    "In the quiet of journaling, you meet yourself.",
+    "Let the ink reveal what the heart hides.",
+    "Your words are seeds. Plant them with purpose.",
+    "We read between the lines so you can see within.",
+    "Capture moments. Create memories.",
+    "In stillness, your thoughts find a voice.",
+    "Pen what you can't say out loud.",
+    "A journal doesn't judge, it listens.",
+    "The blank page is a canvas for your thoughts.",
+    "Let your mind speak; we'll translate the emotion behind it.",
+    "Write to understand, not to impress.",
+    "Thoughts unspoken often carry the most meaning — we help you find it.",
+    "Each page is progress, not perfection."
+  ];
 
-  
   useEffect(() => {
     setIsVisible(true);
     
     const getRandomQuote = () => {
-      // Ensure we don't show the same quote twice in a row
       let newIndex;
       do {
         newIndex = Math.floor(Math.random() * inspirationalQuotes.length);
@@ -51,11 +53,22 @@ export default function Hero() {
       setCurrentQuote(newIndex);
     };
     
-    // Set interval for changing quotes randomly every 5 seconds
     const quoteInterval = setInterval(getRandomQuote, 5000);
     
     return () => clearInterval(quoteInterval);
   }, [currentQuote, inspirationalQuotes.length]);
+
+  const handleStartWriting = () => {
+    if (!isAuthenticated) {
+      // Redirect to login with return URL to journal page
+      navigate('/auth/login', { 
+        state: { from: { pathname: '/journal' } } 
+      });
+    } else {
+      // User is authenticated, go to journal
+      navigate('/journal');
+    }
+  };
 
   return (
     <section className="relative min-h-screen flex flex-col justify-center items-center overflow-hidden">
@@ -97,10 +110,10 @@ export default function Hero() {
         <p className="text-lg md:text-xl text-sky-800 dark:text-sky-300 mb-10 leading-relaxed max-w-3xl mx-auto dark:contrast-100 contrast-200">
           Embark on a journey of self-discovery through the simple yet powerful practice of daily journaling. Your thoughts deserve to be captured, explored, and treasured — and with intelligent insights and personalized suggestions, we help you understand the emotions and patterns behind your words.
         </p>
-
+        
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
-          <a
-            href="/journal"
+          <button
+            onClick={handleStartWriting}
             className="
               bg-sky-700 hover:bg-sky-800 dark:bg-sky-500 dark:hover:bg-sky-600
               text-white font-semibold rounded-lg px-8 py-4 
@@ -117,7 +130,7 @@ export default function Hero() {
             <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
             </svg>
-          </a>
+          </button>
           
           <a
             href="/about"
