@@ -10,6 +10,7 @@ import ProfilePage from "./components/pages/ProfilePage";
 import Footer from "./components/Footer";
 import AppLoader from "./components/AppLoader";
 import Journal from "./components/pages/JournalPage";
+import ScrollToTop from "./components/ScrollToTop";
 import { refreshFirebaseToken, checkTokenExpiration, setCredentials, logout } from './store/slices/authSlice';
 import { API_BASE_URL } from './config/api';
 
@@ -19,23 +20,23 @@ function AppContent() {
   const [isLoading, setIsLoading] = useState(false);
   const { darkMode } = useSelector((state) => state.theme);
   const { isAuthenticated, hasCheckedAuth } = useSelector((state) => state.auth);
-  
+
   const isProfilePage = location.pathname.startsWith('/profile');
 
   useEffect(() => {
     let unsubscribe;
-    
+
     if (!hasCheckedAuth) {
       unsubscribe = onAuthStateChanged(auth, async (user) => {
         if (user) {
           try {
             const token = await user.getIdToken();
             localStorage.setItem('authToken', token);
-            
+
             const response = await fetch(`${API_BASE_URL}/auth/profile`, {
               headers: { Authorization: `Bearer ${token}` },
             });
-            
+
             if (response.ok) {
               const data = await response.json();
               dispatch(setCredentials({ user: data.user, token }));
@@ -49,19 +50,19 @@ function AppContent() {
         }
       });
     }
-    
+
     const refreshInterval = setInterval(() => {
       if (isAuthenticated) {
         dispatch(refreshFirebaseToken());
       }
     }, 50 * 60 * 1000);
-    
+
     const checkInterval = setInterval(() => {
       if (isAuthenticated) {
         dispatch(checkTokenExpiration());
       }
     }, 5 * 60 * 1000);
-    
+
     return () => {
       if (unsubscribe) {
         unsubscribe();
@@ -75,7 +76,7 @@ function AppContent() {
     const handleLoading = () => {
       setTimeout(() => {
         setIsLoading(false);
-      },1000);
+      }, 1000);
     };
 
     if (document.readyState === 'complete') {
@@ -119,9 +120,9 @@ function AppContent() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/auth/:authType" element={<AuthPage />} />
-        <Route path="/profile" element={<ProfilePage />} /> 
+        <Route path="/profile" element={<ProfilePage />} />
         <Route path="/profile/:id" element={<ProfilePage />} />
-        <Route path="/journal" element={<Journal/>} />
+        <Route path="/journal" element={<Journal />} />
       </Routes>
       {!isProfilePage && <Footer />}
     </div>
@@ -131,6 +132,7 @@ function AppContent() {
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <AppContent />
     </Router>
   );

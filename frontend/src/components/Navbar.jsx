@@ -149,6 +149,12 @@ export default function Navbar() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleJournalClick = (e) => {
+    e.preventDefault();
+    navigate("/journal");
+    // Removed scroll to top - Journal will maintain current position
+  };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {

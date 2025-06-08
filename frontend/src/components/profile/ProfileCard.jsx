@@ -3,9 +3,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import ProfileHeader from "./subcomponents/ProfileHeader";
 import ProfileView from "./subcomponents/ProfileView";
 import LoadingState from "./subcomponents/ProfileLoadingState";
-import { ErrorState, StatusAlert } from "./subcomponents/StatusError";
+import { ErrorState } from "./subcomponents/StatusError";
 import { updateProfile, clearUpdateSuccess } from '../../store/slices/profileSlice';
 import { updateUserProfile, verifyToken } from '../../store/slices/authSlice';
+import NotificationMessages from "../Notification";
 import { API_BASE_URL } from '../../config/api';
 
 export default function ProfileCard({ profile: externalProfile, isOwnProfile = true }) {
@@ -19,20 +20,19 @@ export default function ProfileCard({ profile: externalProfile, isOwnProfile = t
   const [error, setError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({});
-  const [updateStatus, setUpdateStatus] = useState({ message: "", type: "" });
   const [photoPreview, setPhotoPreview] = useState(null);
   const [renderKey, setRenderKey] = useState(0);
 
+  // Notification states
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
   // Check for success message from localStorage on component mount
   useEffect(() => {
-    const successMessage = localStorage.getItem('profileUpdateSuccess');
-    if (successMessage) {
-      setUpdateStatus({ message: successMessage, type: "success" });
+    const successMsg = localStorage.getItem('profileUpdateSuccess');
+    if (successMsg) {
+      setSuccessMessage(successMsg);
       localStorage.removeItem('profileUpdateSuccess');
-      
-      setTimeout(() => {
-        setUpdateStatus({ message: "", type: "" });
-      }, 5000);
     }
   }, []);
 
@@ -124,16 +124,17 @@ export default function ProfileCard({ profile: externalProfile, isOwnProfile = t
 
   useEffect(() => {
     if (profileError) {
-      setUpdateStatus({ message: profileError, type: "error" });
+      setErrorMessage(profileError);
     }
   }, [profileError]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setUpdateStatus({ message: "", type: "" });
+    setSuccessMessage("");
+    setErrorMessage("");
 
     if (!formData.fullName?.trim()) {
-      setUpdateStatus({ message: "Full name is required", type: "error" });
+      setErrorMessage("Full name is required");
       return;
     }
 
@@ -177,7 +178,7 @@ export default function ProfileCard({ profile: externalProfile, isOwnProfile = t
       // The page reload will happen in the updateSuccess useEffect
     } catch (error) {
       console.error('Profile update error:', error);
-      setUpdateStatus({ message: "Failed to update profile", type: "error" });
+      setErrorMessage("Failed to update profile");
     }
   };
 
@@ -220,7 +221,14 @@ export default function ProfileCard({ profile: externalProfile, isOwnProfile = t
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-6 pb-10 mt-16" key={renderKey}>
-      {updateStatus.message && <StatusAlert status={updateStatus} />}
+      {/* Notification Messages Component */}
+      <NotificationMessages
+        successMessage={successMessage}
+        error={errorMessage}
+        onDismissSuccess={() => setSuccessMessage('')}
+        onDismissError={() => setErrorMessage('')}
+        darkMode={darkMode}
+      />
 
       <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl overflow-hidden">
         <ProfileHeader

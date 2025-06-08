@@ -48,15 +48,15 @@ export default function JournalCard({
     if (isSelectionMode && isChecked) {
       console.log('Delete selected journal:', journal);
       return darkMode
-        ? 'border-red-400 bg-red-900/20 shadow-red-500/20 ring-2 ring-red-500/50'
-        : 'border-red-400 bg-red-50 shadow-red-200/50 ring-2 ring-red-500/50';
+        ? 'border-red-400 bg-gray-800 shadow-red-500/20 ring-2 ring-red-500/50'
+        : 'border-red-400 bg-white shadow-red-200/50 ring-2 ring-red-500/50';
     }
     // Regular view selection styling
     else if (isSelected && !isSelectionMode) {
       console.log('View selected journal:', journal);
       return darkMode
-        ? 'border-blue-400 bg-blue-900/20 shadow-blue-500/20'
-        : 'border-blue-400 bg-blue-50 shadow-blue-200/50';
+        ? 'border-blue-400 bg-gray-800 shadow-blue-500/20'
+        : 'border-blue-400 bg-white shadow-blue-200/50';
     }
     // Default styling
     else {

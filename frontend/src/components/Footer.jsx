@@ -28,16 +28,16 @@ function Footer() {
       }
     },
     socialLinks: {
-      twitter: "#",
-      linkedin: "#",
-      instagram: "#"
+      twitter: "https://x.com/_Shiva_iitp",
+      linkedin: "https://www.linkedin.com/in/shiva-singh-421152167/",
+      instagram: "https://www.instagram.com/shivu_iitp/"
     },
     quickLinks: [
       { name: 'Home', href: '/' },
       { name: 'Journal', href: '/journal' },
       { name: 'Insights', href: '/insights' },
       { name: 'Profile', href: '/profile' },
-      { name: 'Pricing', href: '/pricing' }
+      // { name: 'Pricing', href: '/pricing' }
     ],
     supportLinks: [
       { name: 'About Us', href: '/about' },
@@ -93,7 +93,8 @@ function Footer() {
             {/* Social Links */}
             <div className="flex space-x-4">
               <a 
-                href={footerData.socialLinks.twitter} 
+                href={footerData.socialLinks.twitter}
+                target='_' 
                 className="p-2 bg-slate-800 hover:bg-sky-600 rounded-lg transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-sky-500/25"
                 aria-label="Twitter"
               >
@@ -101,6 +102,7 @@ function Footer() {
               </a>
               <a 
                 href={footerData.socialLinks.linkedin} 
+                target='_'
                 className="p-2 bg-slate-800 hover:bg-blue-600 rounded-lg transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-blue-500/25"
                 aria-label="LinkedIn"
               >
@@ -108,6 +110,7 @@ function Footer() {
               </a>
               <a 
                 href={footerData.socialLinks.instagram} 
+                target='_'
                 className="p-2 bg-slate-800 hover:bg-pink-600 rounded-lg transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-pink-500/25"
                 aria-label="Instagram"
               >

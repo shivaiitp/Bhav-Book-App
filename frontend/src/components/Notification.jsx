@@ -4,14 +4,14 @@ import { CheckCircle } from 'lucide-react';
 export default function NotificationMessages({ successMessage, error, onDismissSuccess, onDismissError, darkMode }) {
   return (
     <div className="fixed top-20 left-0 right-0 z-40 px-4 pointer-events-none">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-xl mx-auto">
         <AnimatePresence>
           {successMessage && (
             <motion.div
               initial={{ opacity: 0, y: -50 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -50 }}
-              className="mb-4 p-4 bg-green-100 dark:bg-green-900/80 border border-green-300 dark:border-green-700 rounded-lg flex items-center shadow-lg pointer-events-auto"
+              className="mb-4 p-4 bg-green-100 dark:bg-green-900 border border-green-300 dark:border-green-700 rounded-lg flex items-center shadow-lg pointer-events-auto"
             >
               <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 mr-3" />
               <p className="text-green-700 dark:text-green-300 font-medium">{successMessage}</p>
@@ -29,7 +29,7 @@ export default function NotificationMessages({ successMessage, error, onDismissS
               initial={{ opacity: 0, y: -50 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -50 }}
-              className="mb-4 p-4 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg shadow-lg pointer-events-auto"
+              className="mb-4 p-4 bg-red-100 dark:bg-red-900 border border-red-300 dark:border-red-700 rounded-lg shadow-lg pointer-events-auto"
             >
               <p className="text-red-700 dark:text-red-300">{error}</p>
               <button

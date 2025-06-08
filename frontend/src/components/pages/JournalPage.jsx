@@ -11,7 +11,7 @@ import SearchAndFilters from '../journal/SearchAndFilters';
 import SelectionControls from '../SelectionControls';
 import NotificationMessages from '../Notification';
 import EmptyState from '../journal/EmptyState';
-import DeleteDialog from '../journal/DeleteDialog';
+import DeleteDialog from '../DeleteDialog';
 import { useJournalData } from '../../Hooks/useJournalData';
 
 export default function JournalPage() {
@@ -45,6 +45,9 @@ export default function JournalPage() {
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedJournals, setSelectedJournals] = useState([]);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  // New state for deletion loading
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -137,18 +140,35 @@ export default function JournalPage() {
   };
 
   const handleDeleteSelected = async () => {
-    await deleteJournals(selectedJournals);
-    if (selectedJournal && selectedJournals.includes(selectedJournal._id || selectedJournal.id)) {
-      setSelectedJournal(null);
-    }
-    setSelectedJournals([]);
-    setIsSelectionMode(false);
-    setShowDeleteDialog(false);
+    setIsDeleting(true);
+    
+    try {
+      await deleteJournals(selectedJournals);
+      
+      if (selectedJournal && selectedJournals.includes(selectedJournal._id || selectedJournal.id)) {
+        setSelectedJournal(null);
+      }
+      
+      setSelectedJournals([]);
+      setIsSelectionMode(false);
+      setShowDeleteDialog(false);
 
-    // Adjust current page if necessary after deletion
-    const newTotalPages = Math.ceil((totalJournals - selectedJournals.length) / itemsPerPage);
-    if (currentPage > newTotalPages && newTotalPages > 0) {
-      setCurrentPage(newTotalPages);
+      // Adjust current page if necessary after deletion
+      const newTotalPages = Math.ceil((totalJournals - selectedJournals.length) / itemsPerPage);
+      if (currentPage > newTotalPages && newTotalPages > 0) {
+        setCurrentPage(newTotalPages);
+      }
+    } catch (error) {
+      console.error('Delete failed:', error);
+      setError('Failed to delete journals. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    if (!isDeleting) {
+      setShowDeleteDialog(false);
     }
   };
 
@@ -201,7 +221,7 @@ export default function JournalPage() {
           <div className="absolute top-20 left-10 w-96 h-96 rounded-full bg-gradient-to-r from-sky-200 to-blue-200 dark:from-sky-700/30 dark:to-blue-700/20 blur-3xl opacity-30 dark:opacity-20 animate-pulse"></div>
           <div className="absolute bottom-40 right-20 w-96 h-96 rounded-full bg-gradient-to-r from-indigo-200 to-purple-200 dark:from-indigo-700/30 dark:to-purple-700/20 blur-3xl opacity-30 dark:opacity-20 animate-pulse" style={{ animationDelay: "2s" }}></div>
           <div className="absolute top-1/3 left-1/3 w-80 h-80 rounded-full bg-gradient-to-r from-sky-300 to-indigo-200 dark:from-sky-800/30 dark:to-indigo-700/20 blur-3xl opacity-20 dark:opacity-15 animate-pulse" style={{ animationDelay: "4s" }}></div>
-
+          
           {/* Subtle radial gradient overlay */}
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(148,163,184,0.03)_0%,rgba(148,163,184,0)_70%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(148,163,184,0.05)_0%,rgba(148,163,184,0)_70%)]"></div>
         </div>
@@ -297,7 +317,7 @@ export default function JournalPage() {
 
         {/* Results Summary */}
         {filteredJournals.length > 0 && (
-          <div className={`mb-4 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          <div className={`mb-2 text-sm mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
             Showing {displayedJournals.length} of {totalJournals} journal{totalJournals !== 1 ? 's' : ''}
             {searchQuery && ` for "${searchQuery}"`}
             {filterMood !== 'all' && ` filtered by ${filterMood}`}
@@ -441,8 +461,9 @@ export default function JournalPage() {
         isOpen={showDeleteDialog}
         selectedCount={selectedJournals.length}
         onConfirm={handleDeleteSelected}
-        onCancel={() => setShowDeleteDialog(false)}
+        onCancel={handleDeleteCancel}
         darkMode={darkMode}
+        isDeleting={isDeleting}
       />
 
       {isMobile && selectedJournal && (
