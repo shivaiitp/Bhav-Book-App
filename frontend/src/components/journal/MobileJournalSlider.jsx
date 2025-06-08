@@ -1,23 +1,18 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Edit, Trash2, Calendar, Tag, Clock } from 'lucide-react';
+import { X, Edit, Trash2, Calendar, Tag, Clock, MapPin, Activity } from 'lucide-react';
 
 export default function MobileJournalSlider({ journal, isOpen, onClose, onEdit, onDelete, darkMode }) {
   if (!journal) return null;
 
-  const getMoodColor = (mood) => {
-    const colors = {
-      happy: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-      sad: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-      excited: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
-      anxious: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-      content: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-      stressed: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
-      contemplative: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300'
-    };
-    return colors[mood] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+  const emotionEmojis = {
+    happy: '😊', sad: '😢', excited: '🤩', anxious: '😰', content: '😌', stressed: '😫',
+    contemplative: '🤔', grateful: '🙏', angry: '😠', peaceful: '😇', confused: '😕', motivated: '💪'
   };
 
+  const sentimentEmojis = { positive: '😊', negative: '😔', neutral: '😐' };
+
   const formatDate = (dateString) => {
+    if (!dateString) return 'No date';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
       weekday: 'long',
@@ -28,6 +23,7 @@ export default function MobileJournalSlider({ journal, isOpen, onClose, onEdit, 
   };
 
   const formatTime = (dateString) => {
+    if (!dateString) return 'No time';
     const date = new Date(dateString);
     return date.toLocaleTimeString('en-US', {
       hour: '2-digit',
@@ -69,14 +65,11 @@ export default function MobileJournalSlider({ journal, isOpen, onClose, onEdit, 
             <div className={`px-6 py-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
               <div className="flex items-start justify-between">
                 <div className="flex-1 pr-4">
-                  <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
-                    {journal.title}
-                  </h2>
-                  <div className="flex items-center space-x-4 text-sm">
+                  <div className="flex items-center space-x-4 text-sm mb-2">
                     <div className="flex items-center">
                       <Calendar size={14} className={darkMode ? 'text-gray-400' : 'text-gray-500'} />
                       <span className={`ml-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        {formatDate(journal.date)}
+                        {formatDate(journal.date || journal.createdAt)}
                       </span>
                     </div>
                     <div className="flex items-center">
@@ -102,9 +95,13 @@ export default function MobileJournalSlider({ journal, isOpen, onClose, onEdit, 
 
               {/* Mood and Actions */}
               <div className="flex items-center justify-between mt-4">
-                <span className={`px-3 py-1 rounded-full text-sm font-medium capitalize ${getMoodColor(journal.mood)}`}>
-                  {journal.mood}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'
+                  }`}>
+                    {sentimentEmojis[journal.sentiment] || '😐'} {journal.sentiment || 'neutral'}
+                  </span>
+                </div>
                 
                 <div className="flex items-center space-x-2">
                   <button
@@ -134,18 +131,66 @@ export default function MobileJournalSlider({ journal, isOpen, onClose, onEdit, 
             </div>
 
             {/* Content */}
-            <div className="px-6 py-4 overflow-y-auto max-h-[60vh]">
-              <div className={`prose max-w-none ${darkMode ? 'prose-invert' : ''}`}>
-                <p className={`text-base leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  {journal.content}
-                </p>
-              </div>
+            <div className="px-6 py-4 overflow-y-auto max-h-[60vh] space-y-4">
+              {/* Context */}
+              {(journal.currentActivity || journal.location) && (
+                <div className="text-sm text-gray-500 space-y-1">
+                  {journal.currentActivity && (
+                    <div className="flex items-center">
+                      <Activity size={12} className={darkMode ? 'text-gray-400' : 'text-gray-500'} />
+                      <span className={`ml-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        {journal.currentActivity}
+                      </span>
+                    </div>
+                  )}
+                  {journal.location && (
+                    <div className="flex items-center">
+                      <MapPin size={12} className={darkMode ? 'text-gray-400' : 'text-gray-500'} />
+                      <span className={`ml-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        {journal.location}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Emotions */}
+              {journal.emotions && journal.emotions.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {journal.emotions.map((emotion, index) => (
+                    <span
+                      key={index}
+                      className={`px-2 py-1 rounded-full text-xs ${
+                        darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'
+                      }`}
+                    >
+                      {emotionEmojis[emotion] || '😐'} {emotion}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Content */}
+              <p className={`leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                {journal.content || 'No content available'}
+              </p>
+
+              {/* Insights */}
+              {journal.insights && (
+                <div className={`p-3 rounded-lg border-l-4 border-blue-500 ${
+                  darkMode ? 'bg-blue-900/20' : 'bg-blue-50'
+                }`}>
+                  <p className={`text-sm ${darkMode ? 'text-blue-200' : 'text-blue-600'}`}>
+                    {journal.insights}
+                  </p>
+                </div>
+              )}
 
               {/* Tags */}
               {journal.tags && journal.tags.length > 0 && (
-                <div className="mt-6">
-                  <div className="flex items-center mb-3">
-                    <Tag size={16} className={darkMode ? 'text-gray-400' : 'text-gray-500'} />
+                <div>
+                  <div className="flex items-center mb-2">
+                    <Tag size={14} className={darkMode ? 'text-gray-400' : 'text-gray-500'} />
                     <span className={`ml-1 text-sm font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                       Tags
                     </span>
@@ -155,24 +200,13 @@ export default function MobileJournalSlider({ journal, isOpen, onClose, onEdit, 
                       <span
                         key={index}
                         className={`px-2 py-1 rounded-md text-xs font-medium ${
-                          darkMode 
-                            ? 'bg-gray-700 text-gray-300' 
-                            : 'bg-gray-100 text-gray-700'
+                          darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'
                         }`}
                       >
                         #{tag}
                       </span>
                     ))}
                   </div>
-                </div>
-              )}
-
-              {/* Metadata */}
-              {journal.updatedAt !== journal.createdAt && (
-                <div className={`mt-6 pt-4 border-t text-xs ${
-                  darkMode ? 'border-gray-700 text-gray-500' : 'border-gray-200 text-gray-400'
-                }`}>
-                  Last updated: {formatDate(journal.updatedAt)} at {formatTime(journal.updatedAt)}
                 </div>
               )}
 

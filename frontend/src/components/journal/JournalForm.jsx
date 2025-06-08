@@ -1,31 +1,41 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { X, Save, Tag, Smile, Activity, MapPin, Cloud, Camera, Trash2 } from 'lucide-react';
+import { X, Save, Tag, Smile, Activity, MapPin, Cloud, Camera, Trash2, Type } from 'lucide-react';
 import Webcam from 'react-webcam';
 
 export default function JournalForm({ journal, onSave, onClose, darkMode }) {
   const [formData, setFormData] = useState({
-    emotions: [], content: '', currentActivity: '', tags: [], location: '',
-    sentiment: 'neutral', entryType: 'daily', weather: '', insights: ''
+    title: '',
+    emotions: [], 
+    content: '', 
+    currentActivity: '', 
+    tags: [], 
+    location: '',
+    sentiment: 'neutral', 
+    entryType: 'daily', 
+    weather: '', 
+    insights: ''
   });
   const [tagInput, setTagInput] = useState('');
   const [showCamera, setShowCamera] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState({});
   const webcamRef = useRef(null);
 
   const emotions = [
-    { value: 'happy', label: 'Happy', emoji: '😊', color: 'yellow' },
+    { value: 'happy', label: 'Happy', emoji: '😊', color: 'blue'  },
     { value: 'sad', label: 'Sad', emoji: '😢', color: 'blue' },
-    { value: 'excited', label: 'Excited', emoji: '🤩', color: 'orange' },
-    { value: 'anxious', label: 'Anxious', emoji: '😰', color: 'red' },
-    { value: 'content', label: 'Content', emoji: '😌', color: 'green' },
-    { value: 'stressed', label: 'Stressed', emoji: '😫', color: 'purple' },
-    { value: 'contemplative', label: 'Contemplative', emoji: '🤔', color: 'indigo' },
-    { value: 'grateful', label: 'Grateful', emoji: '🙏', color: 'pink' },
-    { value: 'angry', label: 'Angry', emoji: '😠', color: 'red' },
+    { value: 'excited', label: 'Excited', emoji: '🤩', color: 'blue' },
+    { value: 'anxious', label: 'Anxious', emoji: '😰', color: 'blue'  },
+    { value: 'content', label: 'Content', emoji: '😌', color: 'blue'  },
+    { value: 'stressed', label: 'Stressed', emoji: '😫', color: 'blue'  },
+    { value: 'contemplative', label: 'Contemplative', emoji: '🤔', color: 'blue'  },
+    { value: 'grateful', label: 'Grateful', emoji: '🙏', color: 'blue' },
+    { value: 'angry', label: 'Angry', emoji: '😠', color: 'blue'  },
     { value: 'peaceful', label: 'Peaceful', emoji: '😇', color: 'blue' },
-    { value: 'confused', label: 'Confused', emoji: '😕', color: 'gray' },
-    { value: 'motivated', label: 'Motivated', emoji: '💪', color: 'green' }
+    { value: 'confused', label: 'Confused', emoji: '😕', color: 'blue' },
+    { value: 'motivated', label: 'Motivated', emoji: '💪', color: 'blue'  }
   ];
 
   const videoConstraints = {
@@ -34,9 +44,25 @@ export default function JournalForm({ journal, onSave, onClose, darkMode }) {
     facingMode: "user"
   };
 
+  // Word limit function for title
+  const limitTitleWords = (value, maxWords = 3) => {
+    const words = value.trim().split(/\s+/);
+    if (words.length > maxWords) {
+      return words.slice(0, maxWords).join(' ');
+    }
+    return value;
+  };
+
+  // Count words in title
+  const getTitleWordCount = (title) => {
+    if (!title.trim()) return 0;
+    return title.trim().split(/\s+/).length;
+  };
+
   useEffect(() => {
     if (journal) {
       setFormData({
+        title: journal.title || '',
         emotions: journal.emotions || [],
         content: journal.content || '',
         currentActivity: journal.currentActivity || '',
@@ -55,7 +81,19 @@ export default function JournalForm({ journal, onSave, onClose, darkMode }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    if (name === 'title') {
+      // Limit title to 3 words maximum
+      const limitedValue = limitTitleWords(value, 3);
+      setFormData(prev => ({ ...prev, [name]: limitedValue }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
   };
 
   const toggleEmotion = (emotion) => {
@@ -94,16 +132,64 @@ export default function JournalForm({ journal, onSave, onClose, darkMode }) {
     setCapturedImage(null);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!formData.content.trim()) return;
+  // Updated validation function - title word limit and content required
+  const validateForm = () => {
+    const newErrors = {};
     
-    const submitData = { ...formData };
-    if (capturedImage) {
-      submitData.photo = capturedImage;
+    // Title is required
+    if (!formData.title.trim()) {
+      newErrors.title = 'Title is required';
+    } else if (formData.title.trim().length < 3) {
+      newErrors.title = 'Title must be at least 3 characters long';
+    } else {
+      const wordCount = getTitleWordCount(formData.title);
+      if (wordCount > 3) {
+        newErrors.title = 'Title cannot exceed 3 words';
+      }
     }
     
-    onSave(submitData);
+    // Content is required
+    if (!formData.content.trim()) {
+      newErrors.content = 'Content is required';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    console.log('Form submitted!');
+    console.log('Form data:', formData);
+    
+    // Validate form (title word limit and content required)
+    if (!validateForm()) {
+      console.log('Validation failed:', errors);
+      return;
+    }
+    
+    if (isSubmitting) {
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      const submitData = { ...formData };
+      if (capturedImage) {
+        submitData.photo = capturedImage;
+      }
+      
+      console.log('Calling onSave with:', submitData);
+      await onSave(submitData);
+      console.log('onSave completed successfully');
+    } catch (error) {
+      console.error('Error in handleSubmit:', error);
+      setErrors({ general: 'Failed to save journal entry. Please try again.' });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -131,10 +217,18 @@ export default function JournalForm({ journal, onSave, onClose, darkMode }) {
             className={`p-2 rounded-lg transition-colors ${
               darkMode ? 'hover:bg-gray-700 text-gray-400 hover:text-gray-300' : 'hover:bg-gray-100 text-gray-500 hover:text-gray-700'
             }`}
+            disabled={isSubmitting}
           >
             <X size={20} />
           </button>
         </div>
+
+        {/* General Error Message */}
+        {errors.general && (
+          <div className="mx-6 mt-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg">
+            <p className="text-red-700 dark:text-red-300 text-sm">{errors.general}</p>
+          </div>
+        )}
 
         {/* Camera Modal */}
         {showCamera && (
@@ -186,6 +280,37 @@ export default function JournalForm({ journal, onSave, onClose, darkMode }) {
         <form onSubmit={handleSubmit} className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column */}
           <div className="space-y-4">
+            {/* Title Field - WITH 3 WORD LIMIT */}
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                <Type size={16} className="inline mr-1" />
+                Title * (required - max 3 words)
+              </label>
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                placeholder="Enter journal title (max 3 words)"
+                className={`w-full px-3 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                  errors.title 
+                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
+                    : darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                }`}
+              />
+              {errors.title && (
+                <p className="mt-1 text-sm text-red-500">{errors.title}</p>
+              )}
+              <div className={`mt-1 text-xs flex justify-between ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                <span>{formData.title.length} characters</span>
+                <span className={`${getTitleWordCount(formData.title) > 3 ? 'text-red-500' : ''}`}>
+                  {getTitleWordCount(formData.title)}/3 words
+                </span>
+              </div>
+            </div>
+
             {/* Entry Type */}
             <div>
               <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -405,24 +530,28 @@ export default function JournalForm({ journal, onSave, onClose, darkMode }) {
               </div>
             </div>
 
-            {/* Content */}
+            {/* Content with Validation */}
             <div>
               <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                Content *
+                Content * (required)
               </label>
               <textarea
                 name="content"
                 value={formData.content}
                 onChange={handleChange}
                 rows={6}
-                placeholder="What's on your mind?"
+                placeholder="What's on your mind? (required)"
                 className={`w-full px-3 py-2 rounded-lg border resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                  darkMode 
-                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                  errors.content 
+                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
+                    : darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
                 }`}
-                required
               />
+              {errors.content && (
+                <p className="mt-1 text-sm text-red-500">{errors.content}</p>
+              )}
               <div className={`mt-1 text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                 {formData.content.length} characters
               </div>
@@ -484,20 +613,31 @@ export default function JournalForm({ journal, onSave, onClose, darkMode }) {
             <button 
               type="button" 
               onClick={onClose} 
+              disabled={isSubmitting}
               className={`flex-1 px-4 py-2 border rounded-lg font-medium transition-colors ${
                 darkMode 
                   ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
                   : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-              }`}
+              } disabled:opacity-50`}
             >
               Cancel
             </button>
             <button 
               type="submit" 
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center justify-center font-medium hover:bg-blue-700 transition-colors"
+              disabled={isSubmitting || !formData.title.trim() || !formData.content.trim() || getTitleWordCount(formData.title) > 3}
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center justify-center font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Save size={16} className="mr-2" />
-              {journal ? 'Update' : 'Save'}
+              {isSubmitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save size={16} className="mr-2" />
+                  {journal ? 'Update' : 'Save'}
+                </>
+              )}
             </button>
           </div>
         </form>

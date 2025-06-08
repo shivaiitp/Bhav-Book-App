@@ -9,7 +9,7 @@ import AuthPage from "./components/pages/AuthPage";
 import ProfilePage from "./components/pages/ProfilePage";
 import Footer from "./components/Footer";
 import AppLoader from "./components/AppLoader";
-import Journal from "./components/journal/Journal";
+import Journal from "./components/pages/JournalPage";
 import { refreshFirebaseToken, checkTokenExpiration, setCredentials, logout } from './store/slices/authSlice';
 import { API_BASE_URL } from './config/api';
 
