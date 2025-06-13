@@ -1,7 +1,7 @@
 import Journal from "../models/journal.model.js";
 import User from "../models/user.model.js";
 import moment from "moment";
-import { analyzeJournalWithGemini } from "../utils/geminiai.js";
+import { analyzeJournalWithGemini } from "../utils/geminiAi.js";
 
 const frequencyToDays = {
   daily: 1,
