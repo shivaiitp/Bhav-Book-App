@@ -9,7 +9,7 @@ const ScrollToTop = () => {
     window.scrollTo({
       top: 0,
       left: 0,
-      behavior: 'auto' // Optional: adds smooth scrolling animation
+      behavior: 'auto' // 'auto' for instant scroll, 'smooth' for smooth scrolling
     });
   }, [pathname]);
 

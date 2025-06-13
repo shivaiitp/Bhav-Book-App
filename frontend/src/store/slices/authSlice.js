@@ -88,7 +88,9 @@ export const googleAuth = createAsyncThunk(
     try {
       const response = await fetch(`${API_BASE_URL}/auth/firebase/firebase-google-auth`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' 
+          
+        },
         body: JSON.stringify({ idToken }),
       });
       
@@ -143,7 +145,7 @@ export const checkTokenExpiration = createAsyncThunk(
         return;
       }
 
-      const token = await auth.currentUser.getIdToken();
+      const token = await auth.currentUser.getIdToken(true);
       const currentToken = localStorage.getItem('authToken');
       
       if (token !== currentToken) {
@@ -323,6 +325,7 @@ const authSlice = createSlice({
       
       .addCase(refreshFirebaseToken.fulfilled, (state, action) => {
         state.token = action.payload.token;
+        state.isAuthenticated = true;
       })
       .addCase(refreshFirebaseToken.rejected, (state) => {
         state.user = null;

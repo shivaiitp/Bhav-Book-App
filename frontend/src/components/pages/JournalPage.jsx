@@ -51,7 +51,7 @@ export default function JournalPage() {
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const [itemsPerPage] = useState(12); // Increased for grid layout
   const [loadingMore, setLoadingMore] = useState(false);
 
   // Filter and sort journals
@@ -214,7 +214,7 @@ export default function JournalPage() {
       <div className="min-h-screen pt-20 relative">
         {/* Background Elements */}
         <div className="fixed inset-0 bg-gradient-to-b from-sky-100 via-sky-50 to-white dark:from-sky-950 dark:via-slate-900 dark:to-slate-900 z-0"></div>
-
+        
         {/* Common background decorative elements that float across the entire page */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
           {/* Large blurred circles that provide subtle background interest */}
@@ -224,14 +224,6 @@ export default function JournalPage() {
           
           {/* Subtle radial gradient overlay */}
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(148,163,184,0.03)_0%,rgba(148,163,184,0)_70%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(148,163,184,0.05)_0%,rgba(148,163,184,0)_70%)]"></div>
-        </div>
-        {/* Bubble decorations similar to Hero section */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute rounded-full bg-sky-200 dark:bg-sky-900 opacity-30 w-64 h-64 -top-10 -left-10"></div>
-          <div className="absolute rounded-full bg-sky-200 dark:bg-sky-900 opacity-30 w-96 h-96 top-1/4 right-0 transform translate-x-1/3"></div>
-          <div className="absolute rounded-full bg-sky-300 dark:bg-sky-900 opacity-20 w-80 h-80 bottom-0 left-1/4"></div>
-          <div className="absolute rounded-full bg-sky-200 dark:bg-sky-900 opacity-20 w-72 h-72 bottom-10 right-10"></div>
-          <div className="absolute rounded-full bg-sky-300 dark:bg-sky-900 opacity-25 w-48 h-48 top-1/2 left-1/3 transform -translate-x-1/2"></div>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
@@ -260,14 +252,6 @@ export default function JournalPage() {
         
         {/* Subtle radial gradient overlay */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(148,163,184,0.03)_0%,rgba(148,163,184,0)_70%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(148,163,184,0.05)_0%,rgba(148,163,184,0)_70%)]"></div>
-      </div>
-      {/* Bubble decorations similar to Hero section */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute rounded-full bg-sky-200 dark:bg-sky-900 opacity-30 w-64 h-64 -top-10 -left-10"></div>
-        <div className="absolute rounded-full bg-sky-200 dark:bg-sky-900 opacity-30 w-96 h-96 top-1/4 right-0 transform translate-x-1/3"></div>
-        <div className="absolute rounded-full bg-sky-300 dark:bg-sky-900 opacity-20 w-80 h-80 bottom-0 left-1/4"></div>
-        <div className="absolute rounded-full bg-sky-200 dark:bg-sky-900 opacity-20 w-72 h-72 bottom-10 right-10"></div>
-        <div className="absolute rounded-full bg-sky-300 dark:bg-sky-900 opacity-25 w-48 h-48 top-1/2 left-1/3 transform -translate-x-1/2"></div>
       </div>
 
       <NotificationMessages
@@ -317,7 +301,7 @@ export default function JournalPage() {
 
         {/* Results Summary */}
         {filteredJournals.length > 0 && (
-          <div className={`mb-2 text-sm mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          <div className={`mb-6 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
             Showing {displayedJournals.length} of {totalJournals} journal{totalJournals !== 1 ? 's' : ''}
             {searchQuery && ` for "${searchQuery}"`}
             {filterMood !== 'all' && ` filtered by ${filterMood}`}
@@ -336,53 +320,66 @@ export default function JournalPage() {
               darkMode={darkMode}
             />
           ) : (
-            <div className="space-y-6">
-              {/* Journal Cards */}
-              <div className="grid gap-4">
-                {displayedJournals.map((journal) => {
+            <div className="space-y-8">
+              {/* Journal Cards Grid */}
+              <motion.div 
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
+                {displayedJournals.map((journal, index) => {
                   const journalId = journal._id || journal.id;
                   return (
-                    <JournalCard
+                    <motion.div
                       key={journalId}
-                      journal={journal}
-                      isSelected={selectedJournal && (selectedJournal._id || selectedJournal.id) === journalId}
-                      isSelectionMode={isSelectionMode}
-                      isChecked={selectedJournals.includes(journalId)}
-                      onClick={() => handleJournalSelect(journal)}
-                      onEdit={() => handleEditJournal(journal)}
-                      onDelete={() => {
-                        setSelectedJournals([journalId]);
-                        setShowDeleteDialog(true);
-                      }}
-                      darkMode={darkMode}
-                    />
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: index * 0.1 }}
+                    >
+                      <JournalCard
+                        journal={journal}
+                        isSelected={selectedJournal && (selectedJournal._id || selectedJournal.id) === journalId}
+                        isSelectionMode={isSelectionMode}
+                        isChecked={selectedJournals.includes(journalId)}
+                        onClick={() => handleJournalSelect(journal)}
+                        onEdit={() => handleEditJournal(journal)}
+                        onDelete={() => {
+                          setSelectedJournals([journalId]);
+                          setShowDeleteDialog(true);
+                        }}
+                        darkMode={darkMode}
+                      />
+                    </motion.div>
                   );
                 })}
-              </div>
+              </motion.div>
 
               {/* Load More Button */}
               {hasMoreJournals && (
-                <div className="flex justify-center pt-8 pb-4">
+                <div className="flex justify-center">
                   <button
                     onClick={handleLoadMore}
                     disabled={loadingMore}
-                    className={`flex items-center px-8 py-3 rounded-lg font-medium transition-all duration-200 backdrop-blur-sm ${loadingMore
+                    className={`flex items-center px-8 py-3 rounded-xl font-medium transition-all duration-200 ${
+                      loadingMore
                         ? 'cursor-not-allowed opacity-50'
                         : 'hover:scale-105 active:scale-95'
-                      } ${darkMode
-                        ? 'bg-gray-800/80 hover:bg-gray-700/80 text-white border border-gray-600/50'
-                        : 'bg-white/80 hover:bg-gray-50/80 text-gray-700 border border-gray-300/50 shadow-sm'
-                      }`}
+                    } ${
+                      darkMode
+                        ? 'bg-slate-800 hover:bg-slate-700 text-white border border-gray-600'
+                        : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 shadow-sm'
+                    }`}
                   >
                     {loadingMore ? (
                       <>
                         <Loader2 size={18} className="mr-2 animate-spin" />
-                        Loading...
+                        Loading more journals...
                       </>
                     ) : (
                       <>
                         <ChevronDown size={18} className="mr-2" />
-                        Load More ({Math.min(itemsPerPage, totalJournals - displayedJournals.length)} more)
+                        Load More Journals
                       </>
                     )}
                   </button>
@@ -390,17 +387,13 @@ export default function JournalPage() {
               )}
 
               {/* Pagination Info */}
-              {totalJournals > itemsPerPage && (
+              {totalJournals > itemsPerPage && !hasMoreJournals && (
                 <div className={`text-center text-sm ${darkMode ? 'text-gray-500' : 'text-gray-400'} pb-8`}>
-                  Page {currentPage} of {totalPages}
-                  {!hasMoreJournals && (
-                    <div className="mt-2">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm ${darkMode ? 'bg-gray-800/60 text-gray-300' : 'bg-gray-100/60 text-gray-600'
-                        }`}>
-                        All journals loaded
-                      </span>
-                    </div>
-                  )}
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                    darkMode ? 'bg-gray-800/60 text-gray-300' : 'bg-gray-100/60 text-gray-600'
+                  }`}>
+                    All journals loaded
+                  </span>
                 </div>
               )}
             </div>

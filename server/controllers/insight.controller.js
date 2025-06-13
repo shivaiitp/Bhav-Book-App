@@ -48,12 +48,24 @@ export const createInsight = async (req, res) => {
 export const getAllInsights = async (req, res) => {
   try {
     const userId = req.user._id;
+    const { page = 1, limit = 10 } = req.query;
 
-    const insights = await Insight.find({ user: userId }).sort({ createdAt: -1 });
+    const insights = await Insight.find({ user: userId })
+      .sort({ createdAt: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .populate('relatedJournals', 'title createdAt');
+
+    const total = await Insight.countDocuments({ user: userId });
 
     return res.status(200).json({
       success: true,
       data: insights,
+      pagination: {
+        current: page,
+        pages: Math.ceil(total / limit),
+        total
+      }
     });
   } catch (error) {
     console.error("Error fetching insights:", error);
@@ -63,6 +75,7 @@ export const getAllInsights = async (req, res) => {
     });
   }
 };
+
 
 export const getInsightById = async (req, res) => {
   try {

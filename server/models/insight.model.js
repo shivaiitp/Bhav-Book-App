@@ -67,6 +67,10 @@ const insightSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  moodInImage: {
+    type: String,
+    trim: true,
+  },
 });
 
 const Insight = mongoose.model('Insight', insightSchema);

@@ -13,6 +13,7 @@ import Journal from "./components/pages/JournalPage";
 import ScrollToTop from "./components/ScrollToTop";
 import { refreshFirebaseToken, checkTokenExpiration, setCredentials, logout } from './store/slices/authSlice';
 import { API_BASE_URL } from './config/api';
+import Insight from "./components/pages/InsightPage";
 
 function AppContent() {
   const location = useLocation();
@@ -123,6 +124,7 @@ function AppContent() {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/profile/:id" element={<ProfilePage />} />
         <Route path="/journal" element={<Journal />} />
+        <Route path="/insights" element={<Insight />} />
       </Routes>
       {!isProfilePage && <Footer />}
     </div>
