@@ -1,15 +1,21 @@
 import admin from 'firebase-admin';
-import fs from 'fs';
-import path from 'path';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
+// Load base64 string from environment variable
+const base64 = process.env.GOOGLE_SERVICE_ACCOUNT;
+
+if (!base64) {
+  throw new Error("Missing GOOGLE_SERVICE_ACCOUNT environment variable");
+}
+
+// Decode the base64 string to a JSON object
 const serviceAccount = JSON.parse(
-  fs.readFileSync(path.resolve(serviceAccountPath), 'utf-8')
+  Buffer.from(base64, 'base64').toString('utf-8')
 );
 
+// Initialize Firebase admin SDK
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
