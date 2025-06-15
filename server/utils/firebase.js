@@ -11,6 +11,8 @@ if (!base64) {
 }
 
 // Decode the base64 string to a JSON object
+console.log("GOOGLE_SERVICE_ACCOUNT =", process.env.GOOGLE_SERVICE_ACCOUNT?.slice(0, 100));
+
 const serviceAccount = JSON.parse(
   Buffer.from(base64, 'base64').toString('utf-8')
 );
