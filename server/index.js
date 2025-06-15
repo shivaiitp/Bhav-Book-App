@@ -38,8 +38,10 @@ app.get("/", (req, res) => {
   res.send("Emotion Journal API is running...");
 });
 
+app.get('/ping', (req, res) => res.send('pong'));
+
 app.use("/api/auth", authRoutes);
-app.use("/auth/firebase", firebaseAuthRoutes);
+app.use("/api/auth/firebase", firebaseAuthRoutes);
 app.use("/api/journal", journalRoutes);
 app.use("/api/insights", insightRoutes);
 app.use("/api/search", searchRoutes);
