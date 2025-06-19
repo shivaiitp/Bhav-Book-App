@@ -26,6 +26,11 @@ const insightSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
+  Mistakes: {
+    type: String,
+    default: "No significant mistakes identified during this period.",
+    trim: true,
+  },
   suggestion: {
     type: String,
     required: true,
@@ -33,13 +38,12 @@ const insightSchema = new mongoose.Schema({
   },
   isUserStuck: {
     type: String,
-    default: false,
+    default: "No, You are not stuck with anything.",
+    trim: true,
   },
   waysToGetUnstuck: {
     type: String,
-    required: function () {
-      return this.isUserStuck === true;
-    },
+    default: "Continue maintaining your current positive state.",
     trim: true,
   },
   journalCount: {
@@ -69,6 +73,12 @@ const insightSchema = new mongoose.Schema({
   },
   moodInImage: {
     type: String,
+    default: "Image not provided",
+    trim: true,
+  },
+  Attachment: {
+    type: String,
+    default: "Attachment not provided",
     trim: true,
   },
 });
