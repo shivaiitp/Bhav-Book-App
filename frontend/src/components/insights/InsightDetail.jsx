@@ -10,7 +10,10 @@ import {
   BookOpen,
   Lightbulb,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  AlertCircle,
+  Paperclip,
+  Image as ImageIcon
 } from 'lucide-react';
 
 export default function InsightDetail({ insight, onClose, darkMode }) {
@@ -184,6 +187,25 @@ export default function InsightDetail({ insight, onClose, darkMode }) {
                 </div>
               </div>
 
+              {/* Mistakes Section */}
+              {insight.Mistakes && insight.Mistakes !== "No significant mistakes identified during this period." && (
+                <div>
+                  <h3 className={`text-lg font-semibold mb-4 flex items-center ${
+                    darkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    <AlertCircle className="w-5 h-5 mr-2 text-red-500" />
+                    Areas for Improvement
+                  </h3>
+                  <div className="p-6 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                    <p className={`text-base leading-relaxed ${
+                      darkMode ? 'text-red-200' : 'text-red-800'
+                    }`}>
+                      {insight.Mistakes}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Suggestion */}
               <div>
                 <h3 className={`text-lg font-semibold mb-4 flex items-center ${
@@ -204,7 +226,7 @@ export default function InsightDetail({ insight, onClose, darkMode }) {
               </div>
 
               {/* Stuck Section */}
-              {insight.isUserStuck && insight.waysToGetUnstuck && (
+              {insight.isUserStuck && insight.isUserStuck.startsWith("Yes") && insight.waysToGetUnstuck && (
                 <div>
                   <h3 className={`text-lg font-semibold mb-4 flex items-center ${
                     darkMode ? 'text-white' : 'text-gray-900'
@@ -223,11 +245,12 @@ export default function InsightDetail({ insight, onClose, darkMode }) {
               )}
 
               {/* Mood Image */}
-              {insight.moodInImage && (
+              {insight.moodInImage && insight.moodInImage !== "Image not provided" && (
                 <div>
-                  <h3 className={`text-lg font-semibold mb-4 ${
+                  <h3 className={`text-lg font-semibold mb-4 flex items-center ${
                     darkMode ? 'text-white' : 'text-gray-900'
                   }`}>
+                    <ImageIcon className="w-5 h-5 mr-2 text-purple-500" />
                     Mood Visualization
                   </h3>
                   <div className={`p-6 rounded-xl text-center ${
@@ -236,6 +259,27 @@ export default function InsightDetail({ insight, onClose, darkMode }) {
                     <p className={`text-2xl mb-2`}>{insight.moodInImage}</p>
                     <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                       Visual representation of your overall mood
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Attachment Section */}
+              {insight.Attachment && insight.Attachment !== "Attachment not provided" && (
+                <div>
+                  <h3 className={`text-lg font-semibold mb-4 flex items-center ${
+                    darkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    <Paperclip className="w-5 h-5 mr-2 text-blue-500" />
+                    Attachment Analysis
+                  </h3>
+                  <div className={`p-6 rounded-xl ${
+                    darkMode ? 'bg-slate-700/50' : 'bg-gray-50'
+                  }`}>
+                    <p className={`text-base leading-relaxed ${
+                      darkMode ? 'text-gray-300' : 'text-gray-700'
+                    }`}>
+                      {insight.Attachment}
                     </p>
                   </div>
                 </div>

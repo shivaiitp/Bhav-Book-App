@@ -1,6 +1,8 @@
-// src/components/Impact.jsx
+
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 // iPhone-style emoji paths
 const EMOJI_PATHS = {
@@ -11,6 +13,10 @@ const EMOJI_PATHS = {
 
 export default function Impact() {
   const [hoveredItem, setHoveredItem] = useState(null);
+  const navigate = useNavigate();
+  
+  // Get authentication status from Redux store
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
   
   const impactItems = [
     {
@@ -56,9 +62,20 @@ export default function Impact() {
     }
   };
 
+  // Handle navigation based on authentication status
+  const handleStartJourney = () => {
+    if (isAuthenticated && user) {
+      // User is logged in, redirect to journal page
+      navigate('/journal');
+    } else {
+      // User is not logged in, redirect to login page
+      navigate('/login');
+    }
+  };
+
   return (
     <motion.section
-      className="py-24 px-4 sm:px-8 relative overflow-hidden pt-16"
+      className="pb-12 px-4 sm:px-8 relative overflow-hidden pt-5"
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.2 }}
@@ -127,11 +144,12 @@ export default function Impact() {
           </p>
           <div className="mt-8">
             <motion.button 
+              onClick={handleStartJourney}
               className="px-10 py-4 bg-gradient-to-r from-indigo-600 to-sky-500 hover:from-indigo-700 hover:to-sky-600 dark:from-indigo-500 dark:to-sky-400 dark:hover:from-indigo-600 dark:hover:to-sky-500 text-white font-medium rounded-full shadow-lg hover:shadow-xl shadow-indigo-500/20 dark:shadow-indigo-500/10 transition-all duration-300 transform hover:-translate-y-1"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.98 }}
             >
-              Start Your Journey
+              {isAuthenticated ? 'Go to Journal' : 'Start Your Journey'}
             </motion.button>
           </div>
         </motion.div>

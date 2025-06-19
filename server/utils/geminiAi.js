@@ -56,7 +56,10 @@ async function main(entryText, imageUrls = null, attachmentUrls = null, isShort 
     "sentiment": "positive | neutral | negative",
     "emotions": ["happy", "anxious", "overwhelmed"],
     "insight": "Summarized emotional reflection and self-awareness",
-    "suggestion": "Empathetic and constructive advice for the user that what they can do next",
+    
+    "Mistakes": "List of any mistakes or missteps the user made during this period. Be specific and constructive. Mention how these mistakes may have affected their emotional state or well-being. Use 2–3 sentences.",
+    "suggestion": "Empathetic and constructive advice for the user that what they can do next to overcome their mistakes or maintain their good state. Give points on how to do it. Explain in 3–4 sentences. This should be actionable and realistic.",
+
     "isUserStuck": Yes, You are stucked with.... / No, You are not stucked with anything.,
     "waysToGetUnstuck": "Suggestions for getting unstuck or maintaining a good state",
     "moodInImage": "happy | neutral | sad", (if the image not provided say "Image not provided")

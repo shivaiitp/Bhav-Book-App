@@ -8,7 +8,9 @@ import {
   Clock,
   BookOpen,
   Lightbulb,
-  ArrowRight
+  ArrowRight,
+  AlertCircle,
+  Paperclip
 } from 'lucide-react';
 
 export default function InsightCard({ insight, onClick, darkMode }) {
@@ -41,7 +43,7 @@ export default function InsightCard({ insight, onClick, darkMode }) {
       case 'negative':
         return 'border-red-200 dark:border-red-800';
       default:
-        return darkMode ? 'border-gray-700' : 'border-gray-200'; // Neutral border for yellow
+        return darkMode ? 'border-gray-700' : 'border-gray-200';
     }
   };
 
@@ -150,8 +152,26 @@ export default function InsightCard({ insight, onClick, darkMode }) {
         </div>
       </div>
 
+      {/* Mistakes indicator */}
+      {insight.Mistakes && insight.Mistakes !== "No significant mistakes identified during this period." && (
+        <div className={`mb-3 p-2 rounded-md border-l-2 ${
+          darkMode 
+            ? 'bg-red-900/20 border-red-600' 
+            : 'bg-red-50 border-red-400'
+        }`}>
+          <div className="flex items-center space-x-1">
+            <AlertCircle className={`w-3 h-3 ${darkMode ? 'text-red-400' : 'text-red-600'}`} />
+            <p className={`text-xs font-medium ${
+              darkMode ? 'text-red-300' : 'text-red-700'
+            }`}>
+              Areas for improvement identified
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Stuck indicator */}
-      {insight.isUserStuck && (
+      {insight.isUserStuck && insight.isUserStuck.startsWith("Yes") && (
         <div className={`mb-3 p-2 rounded-md border-l-2 ${
           darkMode 
             ? 'bg-orange-900/20 border-orange-600' 
@@ -162,6 +182,24 @@ export default function InsightCard({ insight, onClick, darkMode }) {
           }`}>
             ⚠️ Feeling stuck
           </p>
+        </div>
+      )}
+
+      {/* Attachment indicator */}
+      {insight.Attachment && insight.Attachment !== "Attachment not provided" && (
+        <div className={`mb-3 p-2 rounded-md ${
+          darkMode 
+            ? 'bg-blue-900/20' 
+            : 'bg-blue-50'
+        }`}>
+          <div className="flex items-center space-x-1">
+            <Paperclip className={`w-3 h-3 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+            <p className={`text-xs font-medium ${
+              darkMode ? 'text-blue-300' : 'text-blue-700'
+            }`}>
+              Has attachment
+            </p>
+          </div>
         </div>
       )}
 

@@ -144,15 +144,8 @@ export default function Navbar() {
   };
 
   const handleHomeClick = (e) => {
-    e.preventDefault();
     navigate("/");
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleJournalClick = (e) => {
-    e.preventDefault();
-    navigate("/journal");
-    // Removed scroll to top - Journal will maintain current position
   };
 
   useEffect(() => {
@@ -358,7 +351,7 @@ export default function Navbar() {
                   : "text-gray-700 hover:text-sky-600"
                 }`}
             >
-              Home
+              Home 
             </button>
 
             {isAuthenticated && (

@@ -166,7 +166,7 @@ function Footer() {
           </div>
 
           {/* Contact Info */}
-          <div>
+          <div className='relative right-10'>
             <h3 className="text-lg font-semibold mb-6 text-white">Get in Touch</h3>
             <div className="space-y-4">
               <div className="flex items-start space-x-3 group">

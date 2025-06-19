@@ -161,8 +161,8 @@ export default function SearchAndFilters({
       {/* Desktop Layout - Grid with 4 columns */}
       <div className="hidden md:grid md:grid-cols-4 w-full gap-4">
         {/* Search Bar - Takes 2 columns (50% width) on desktop */}
-        <div className="col-span-2 relative">
-          <div className="relative">
+        <div className=" col-span-2 relative">
+          <div className="relative ">
             <Search size={20} className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
             <input
               type="text"
@@ -200,7 +200,7 @@ export default function SearchAndFilters({
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className={`flex-1 px-3 py-2 rounded-lg border text-sm ${
+            className={`flex-1 px-4 py-2 rounded-lg border ${
               darkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-900'
             } focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors`}
           >

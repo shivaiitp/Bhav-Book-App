@@ -26,6 +26,21 @@ export default function InsightsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
 
+  // Normalize insight data to handle missing fields
+  const normalizeInsightData = (insight) => {
+    return {
+      ...insight,
+      Mistakes: insight.Mistakes || "No significant mistakes identified during this period.",
+      Attachment: insight.Attachment || "Attachment not provided",
+      moodInImage: insight.moodInImage || "Image not provided",
+      isUserStuck: insight.isUserStuck || "No, You are not stuck with anything.",
+      waysToGetUnstuck: insight.waysToGetUnstuck || "Continue maintaining your current positive state.",
+      emotions: insight.emotions || [],
+      insight: insight.insight || "No specific insights available for this period.",
+      suggestion: insight.suggestion || "Keep up the good work and continue your current practices."
+    };
+  };
+
   // Fetch insights
   const fetchInsights = async (page = 1, append = false) => {
     try {
@@ -42,10 +57,13 @@ export default function InsightsPage() {
       const data = await response.json();
 
       if (data.success) {
+        // Normalize the insight data to handle missing fields
+        const normalizedInsights = data.data.map(normalizeInsightData);
+        
         if (append) {
-          setInsights(prev => [...prev, ...data.data]);
+          setInsights(prev => [...prev, ...normalizedInsights]);
         } else {
-          setInsights(data.data);
+          setInsights(normalizedInsights);
         }
         setTotalPages(data.pagination?.pages || 1);
         setCurrentPage(page);
@@ -107,6 +125,11 @@ export default function InsightsPage() {
     }
   };
 
+  // Handle insight selection with normalization
+  const handleInsightClick = (insight) => {
+    setSelectedInsight(normalizeInsightData(insight));
+  };
+
   useEffect(() => {
     fetchInsights();
   }, []);
@@ -136,7 +159,7 @@ export default function InsightsPage() {
   }
 
   return (
-    <div className="min-h-screen pt-20 relative">
+    <div className="min-h-screen pt-14 relative">
       {/* Background */}
       <div className="fixed inset-0 bg-gradient-to-b from-sky-100 via-sky-50 to-white dark:from-sky-950 dark:via-slate-900 dark:to-slate-900 z-0"></div>
       
@@ -174,7 +197,7 @@ export default function InsightsPage() {
           totalPages={totalPages}
           loadingMore={loadingMore}
           darkMode={darkMode}
-          onInsightClick={setSelectedInsight}
+          onInsightClick={handleInsightClick}
           onLoadMore={handleLoadMore}
           onCreateInsight={() => setShowCreateModal(true)}
         />

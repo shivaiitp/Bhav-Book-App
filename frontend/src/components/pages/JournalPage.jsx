@@ -239,7 +239,7 @@ export default function JournalPage() {
   }
 
   return (
-    <div className="min-h-screen pt-20 relative">
+    <div className="min-h-screen pt-14 relative">
       {/* Background Elements */}
       <div className="fixed inset-0 bg-gradient-to-b from-sky-100 via-sky-50 to-white dark:from-sky-950 dark:via-slate-900 dark:to-slate-900 z-0"></div>
       

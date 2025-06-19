@@ -14,13 +14,13 @@ export default function InsightsSort({
     >
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         {/* Total Count */}
-        <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+        <div className={`mt-2 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
           <Calendar className="w-4 h-4 inline mr-2" />
           {totalInsights} insight{totalInsights !== 1 ? 's' : ''} total
         </div>
 
         {/* Sort Options */}
-        <div className="flex items-center space-x-3">
+        <div className="flex my-[-6px] items-center space-x-3">
           <ArrowUpDown className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
           <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
             Sort by:

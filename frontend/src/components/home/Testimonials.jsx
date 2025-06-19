@@ -7,24 +7,24 @@ export default function Testimonials() {
 
   const testimonials = [
     {
-      name: "Aarav Singh",
-      role: "Tech Professional",
+      name: "Shashi Raj",
+      role: "Student @IIT Patna",
       avatar: "👨🏽‍💻",
       quote:
         "This app helped me realize what I was bottling up. The insights are scarily accurate, and I've become much more aware of my emotional patterns.",
       rating: 5,
     },
     {
-      name: "Sanya Patel",
-      role: "Yoga Instructor",
+      name: "Chetan Sharma",
+      role: "Intern @Amazon",
       avatar: "👩🏽‍🦱",
       quote:
-        "Journaling feels like therapy now — and I love seeing my emotional charts evolve. It's become an essential part of my daily mindfulness practice.",
+        "I was struggling with depression during my intern season. This app helped me to get out of it.",
       rating: 5,
     },
     {
-      name: "Michael Chen",
-      role: "Graduate Student",
+      name: "Bishwamohan Jena",
+      role: "Software Engineer @Google",
       avatar: "👨🏻‍🎓",
       quote:
         "I was skeptical at first, but the AI insights have helped me recognize stress triggers I never noticed before. Life-changing tool for self-awareness.",
@@ -110,34 +110,33 @@ export default function Testimonials() {
 
   return (
     <motion.section
-      className="py-20 px-4 sm:px-8 relative overflow-hidden -mt-16 z-10"
+      className="pb-12 sm:py-20 px-4 sm:px-8 relative overflow-hidden mt-8 z-10"
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.2 }}
       variants={containerVariants}
     >
-      {/* Removed individual background elements */}
-
       {/* Content */}
       <div className="max-w-6xl mx-auto text-center relative z-10">
-        <motion.div className="mb-12" variants={itemVariants}>
+        <motion.div className="mb-8 sm:mb-12" variants={itemVariants}>
           <div className="inline-block bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 px-4 py-1 rounded-full text-sm font-medium mb-4">
             TESTIMONIALS
           </div>
-          <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4 px-2">
             What Our{" "}
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-sky-500 dark:from-indigo-400 dark:to-sky-300">
               Users
             </span>{" "}
             Say
           </h2>
-          <p className="text-lg text-gray-700 dark:text-gray-300 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-gray-700 dark:text-gray-300 max-w-2xl mx-auto px-2">
             Join thousands of people who have transformed their self-awareness through journaling
           </p>
         </motion.div>
 
-        <motion.div className="max-w-3xl mx-auto relative" variants={itemVariants}>
-          <div className="relative h-80 sm:h-72 mb-8 overflow-hidden">
+        <motion.div className="max-w-4xl mx-auto relative" variants={itemVariants}>
+          {/* Increased height for mobile and made it responsive */}
+          <div className="relative min-h-[300px] sm:h-80 lg:h-72 mb-6 sm:mb-8 overflow-hidden">
             <AnimatePresence initial={false} custom={direction}>
               <motion.div
                 key={activeIndex}
@@ -146,24 +145,25 @@ export default function Testimonials() {
                 initial="enter"
                 animate="center"
                 exit="exit"
-                className="absolute w-full"
+                className="absolute w-full h-full flex items-start"
               >
-                <div className="bg-white/90 backdrop-blur-sm dark:bg-slate-800/90 rounded-2xl shadow-xl p-6 sm:p-8 border border-white/50 dark:border-gray-700/50">
-                  <div className="flex flex-col items-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-sky-400 rounded-full flex items-center justify-center text-3xl mb-4 shadow-lg">
+                <div className="bg-white/90 backdrop-blur-sm dark:bg-slate-800/90 rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 border border-white/50 dark:border-gray-700/50 w-full h-full flex flex-col justify-center">
+                  <div className="flex flex-col items-center h-full justify-center">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-indigo-500 to-sky-400 rounded-full flex items-center justify-center text-2xl sm:text-3xl mb-3 sm:mb-4 shadow-lg flex-shrink-0">
                       {testimonials[activeIndex].avatar}
                     </div>
-                    <div className="text-yellow-400 mb-4">
+                    <div className="text-yellow-400 mb-3 sm:mb-4 flex-shrink-0">
                       {renderStars(testimonials[activeIndex].rating)}
                     </div>
-                    <p className="text-lg text-gray-700 dark:text-gray-200 italic mb-6 max-w-2xl">
+                    {/* Improved text sizing and spacing for mobile */}
+                    <p className="text-sm sm:text-base lg:text-lg text-gray-700 dark:text-gray-200 italic mb-4 sm:mb-6 max-w-2xl leading-relaxed px-2 flex-grow flex items-center text-center">
                       "{testimonials[activeIndex].quote}"
                     </p>
-                    <div>
-                      <div className="font-bold text-gray-900 dark:text-white">
+                    <div className="flex-shrink-0">
+                      <div className="font-bold text-gray-900 dark:text-white text-sm sm:text-base">
                         {testimonials[activeIndex].name}
                       </div>
-                      <div className="text-gray-600 dark:text-gray-400">
+                      <div className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm">
                         {testimonials[activeIndex].role}
                       </div>
                     </div>
@@ -173,36 +173,38 @@ export default function Testimonials() {
             </AnimatePresence>
           </div>
 
-          <div className="flex justify-center gap-4">
+          {/* Navigation buttons */}
+          <div className="flex justify-center gap-3 sm:gap-4 mb-4 sm:mb-6">
             <motion.button
               onClick={prevTestimonial}
-              className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm dark:bg-slate-800/90 shadow-md flex items-center justify-center hover:bg-sky-50 dark:hover:bg-slate-700 transition-colors border border-gray-100/60 dark:border-gray-700/50"
+              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/90 backdrop-blur-sm dark:bg-slate-800/90 shadow-md flex items-center justify-center hover:bg-sky-50 dark:hover:bg-slate-700 transition-colors border border-gray-100/60 dark:border-gray-700/50"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </motion.button>
 
             <motion.button
               onClick={nextTestimonial}
-              className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm dark:bg-slate-800/90 shadow-md flex items-center justify-center hover:bg-sky-50 dark:hover:bg-slate-700 transition-colors border border-gray-100/60 dark:border-gray-700/50"
+              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/90 backdrop-blur-sm dark:bg-slate-800/90 shadow-md flex items-center justify-center hover:bg-sky-50 dark:hover:bg-slate-700 transition-colors border border-gray-100/60 dark:border-gray-700/50"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </motion.button>
           </div>
 
-          <div className="flex justify-center mt-6 gap-2">
+          {/* Pagination dots */}
+          <div className="flex justify-center gap-2">
             {testimonials.map((_, i) => (
               <button
                 key={i}
                 onClick={() => goToTestimonial(i)}
-                className={`w-2.5 h-2.5 rounded-full transition-colors ${
+                className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full transition-colors ${
                   i === activeIndex ? "bg-indigo-500" : "bg-gray-400 dark:bg-gray-600"
                 }`}
               />
