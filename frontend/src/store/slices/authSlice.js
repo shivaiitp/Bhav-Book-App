@@ -85,6 +85,7 @@ export const registerUser = createAsyncThunk(
 export const googleAuth = createAsyncThunk(
   'auth/googleAuth',
   async (idToken, { rejectWithValue }) => {
+    // console.log(idToken);
     try {
       const response = await fetch(`${API_BASE_URL}/auth/firebase/firebase-google-auth`, {
         method: 'POST',
@@ -101,7 +102,6 @@ export const googleAuth = createAsyncThunk(
       
       const data = await response.json();
       localStorage.setItem('authToken', idToken);
-      
       return data.user;
     } catch (error) {
       return rejectWithValue(error.message);

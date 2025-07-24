@@ -1,5 +1,5 @@
 // src/components/Home.jsx
-import Navbar from '../Navbar';
+import Navbar from '../Navbar/Navbar';
 import Features from '../home/Features';
 import Hero from '../home/Hero';
 import Impact from '../home/Impact';
@@ -24,7 +24,7 @@ function Home() {
 
       {/* Content sections with relative positioning and higher z-index */}
       <div className="relative z-10">
-        <Navbar />
+        {/* <Navbar /> */}
         <Hero />
         <Features />
         <Impact />

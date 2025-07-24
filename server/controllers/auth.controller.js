@@ -3,7 +3,7 @@ import User from "../models/user.model.js";
 import cloudinary from "../utils/cloudinary.js";
 import getDataUri from "../utils/datauri.js";
 
-// ==================== VERIFY TOKEN ====================
+// ==================== VERIFY TOKEN (Handles Google & Email Signup) ====================
 export const verifyToken = async (req, res) => {
   const idToken = req.headers.authorization?.split("Bearer ")[1];
 
@@ -15,13 +15,26 @@ export const verifyToken = async (req, res) => {
     const decodedToken = await admin.auth().verifyIdToken(idToken);
     const firebaseUid = decodedToken.uid;
 
-    const user = await User.findOne({ firebaseUID: firebaseUid.trim() });
+    // Try to find user
+    let user = await User.findOne({ firebaseUID: firebaseUid.trim() });
 
+    // If user does not exist, create it (Google or Email user)
     if (!user) {
-      return res.status(404).json({ message: "User not found", success: false });
+      const { name, email, phone_number, picture } = decodedToken;
+
+      user = await User.create({
+        firebaseUID: firebaseUid,
+        fullName: name || 'New User',
+        email: email || '',
+        phone: phone_number || '',
+        profile: {
+          avatar: picture || '',
+        },
+        isPhoneVerified: !!phone_number
+      });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       user: {
         id: user._id,
@@ -34,15 +47,13 @@ export const verifyToken = async (req, res) => {
         isPhoneVerified: user.isPhoneVerified || false,
       },
     });
+
   } catch (err) {
-    if (err.code === 'auth/id-token-expired') {
-      return res.status(401).json({ message: "Token expired", success: false });
-    }
-    
     console.error("Token verification error:", err);
-    res.status(401).json({ message: "Invalid token", success: false });
+    return res.status(401).json({ message: "Invalid or expired token", success: false });
   }
 };
+
 
 // ==================== GET PROFILE ====================
 export const getUserProfile = async (req, res) => {

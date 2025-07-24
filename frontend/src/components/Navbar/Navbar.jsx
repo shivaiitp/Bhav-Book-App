@@ -3,19 +3,18 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, Sun, Moon, User, LogOut, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSelector, useDispatch } from 'react-redux';
-import { auth } from '../config/firebase';
-import SearchBox from "./SearchBox";
-import logoDark from "../assets/logo.png";
-import logoLight from "../assets/logo-light.png";
-import { API_BASE_URL } from "../config/api";
-import { logout, verifyToken, setCheckingAuth, setInitialLoadComplete, setAuthChecked } from '../store/slices/authSlice';
-import { toggleTheme, setTheme } from '../store/slices/themeSlice';
+import { auth } from '../../config/firebase';
+import SearchBox from "../SearchBox";
+import logoDark from "../../assets/logo.png";
+import logoLight from "../../assets/logo-light.png";
+import { API_BASE_URL } from "../../config/api";
+import { logout, verifyToken, setAuthChecked } from '../../store/slices/authSlice';
+import { toggleTheme, setTheme } from '../../store/slices/themeSlice';
 
 export default function Navbar() {
   const dispatch = useDispatch();
   const { 
     isAuthenticated, 
-    user, 
     isCheckingAuth, 
     isInitialLoad,
     hasCheckedAuth
@@ -34,7 +33,7 @@ export default function Navbar() {
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
   const inputRef = useRef(null);
-  
+
   const handleSearch = async (query) => {
     if (!query.trim()) {
       setSearchResults([]);
@@ -128,12 +127,12 @@ export default function Navbar() {
 
   const handleLogout = () => {
     localStorage.removeItem('authToken');
-    
+
     if (auth.currentUser) {
       auth.signOut().catch(console.error);
     }
     setShowDropdown(false);
-    
+
     setTimeout(() => {
       window.location.reload();
     }, 100);
@@ -143,7 +142,7 @@ export default function Navbar() {
     dispatch(toggleTheme());
   };
 
-  const handleHomeClick = (e) => {
+  const handleHomeClick = () => {
     navigate("/");
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -163,7 +162,7 @@ export default function Navbar() {
     const initializeApp = async () => {
       const savedTheme = localStorage.getItem("theme");
       const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      
+
       if (savedTheme === "dark" || (!savedTheme && prefersDark)) {
         dispatch(setTheme(true));
       } else {
@@ -238,13 +237,13 @@ export default function Navbar() {
               </Link>
             </div>
             
-            <div className="hidden md:flex items-center space-x-4">
+            <div className="hidden lg:flex items-center space-x-4">
               <div className="w-20 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
               <div className="w-16 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
               <div className="w-24 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
             </div>
 
-            <div className="md:hidden">
+            <div className="lg:hidden">
               <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
             </div>
           </div>
@@ -267,7 +266,7 @@ export default function Navbar() {
             </Link>
           </div>
 
-          <div className="hidden md:flex absolute left-1/2 transform -translate-x-1/2 search-container">
+          <div className="hidden lg:flex absolute left-1/2 transform -translate-x-1/2 search-container">
             <div className="relative w-80">
               <SearchBox
                 onSearch={handleSearch}
@@ -280,9 +279,7 @@ export default function Navbar() {
               />
               
               {showSearchResults && (
-                <div className={`absolute top-full left-0 right-0 mt-1 rounded-lg shadow-lg border z-50 max-h-96 overflow-y-auto ${
-                  darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-                }`}>
+                <div className={`absolute top-full left-0 right-0 mt-1 rounded-lg shadow-lg border z-50 max-h-96 overflow-y-auto ${darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}>
                   {searchLoading ? (
                     <div className="p-4 text-center">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-sky-600 mx-auto"></div>
@@ -297,11 +294,7 @@ export default function Navbar() {
                           key={user.id}
                           onClick={() => handleSelectUser(user)}
                           onMouseEnter={() => setHighlightedIndex(idx)}
-                          className={`w-full text-left px-4 py-3 flex items-center space-x-3 transition-colors ${
-                            highlightedIndex === idx
-                              ? "bg-sky-100 dark:bg-sky-700"
-                              : "hover:bg-gray-50 dark:hover:bg-gray-700"
-                          } ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+                          className={`w-full text-left px-4 py-3 flex items-center space-x-3 transition-colors ${highlightedIndex === idx ? "bg-sky-100 dark:bg-sky-700" : "hover:bg-gray-50 dark:hover:bg-gray-700"} ${darkMode ? "text-gray-300" : "text-gray-700"}`}
                         >
                           <div className="flex-shrink-0">
                             {user.profile?.avatar ? (
@@ -339,17 +332,10 @@ export default function Navbar() {
             </div>
           </div>
 
-          <div className="hidden md:flex items-center space-x-1">
+          <div className="hidden lg:flex items-center space-x-1">
             <button
               onClick={handleHomeClick}
-              className={`px-3 py-2 rounded-md font-medium transition-colors duration-200 ${darkMode
-                ? isActive("/")
-                  ? "text-sky-400"
-                  : "text-gray-300 hover:text-sky-400"
-                : isActive("/")
-                  ? "text-sky-600"
-                  : "text-gray-700 hover:text-sky-600"
-                }`}
+              className={`px-3 py-2 rounded-md font-medium transition-colors duration-200 ${darkMode ? (isActive("/") ? "text-sky-400" : "text-gray-300 hover:text-sky-400") : (isActive("/") ? "text-sky-600" : "text-gray-700 hover:text-sky-600")}`}
             >
               Home 
             </button>
@@ -367,10 +353,7 @@ export default function Navbar() {
 
             <button
               onClick={handleThemeToggle}
-              className={`cursor-pointer mx-2 p-2 rounded-full transition-colors ${darkMode
-                ? "bg-gray-800 text-yellow-300 hover:bg-gray-700"
-                : "bg-sky-50 text-sky-600 hover:bg-sky-100"
-                }`}
+              className={`cursor-pointer mx-2 p-2 rounded-full transition-colors ${darkMode ? "bg-gray-800 text-yellow-300 hover:bg-gray-700" : "bg-sky-50 text-sky-600 hover:bg-sky-100"}`}
               aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
             >
               {darkMode ? <Sun size={18} /> : <Moon size={18} />}
@@ -395,18 +378,12 @@ export default function Navbar() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.2 }}
-                      className={`absolute right-0 mt-2 w-48 rounded-lg shadow-lg border z-50 ${darkMode
-                        ? "bg-gray-800 border-gray-700"
-                        : "bg-white border-gray-200"
-                        }`}
+                      className={`absolute right-0 mt-2 w-48 rounded-lg shadow-lg border z-50 ${darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}
                     >
                       <div className="py-1">
                         <Link
                           to="/profile"
-                          className={`flex items-center space-x-2 px-4 py-2 text-sm font-medium transition-colors ${darkMode
-                            ? "text-gray-300 hover:bg-gray-700 hover:text-white"
-                            : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-                            }`}
+                          className={`flex items-center space-x-2 px-4 py-2 text-sm font-medium transition-colors ${darkMode ? "text-gray-300 hover:bg-gray-700 hover:text-white" : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"}`}
                           onClick={() => setShowDropdown(false)}
                         >
                           <User size={16} />
@@ -414,10 +391,7 @@ export default function Navbar() {
                         </Link>
                         <button
                           onClick={handleLogout}
-                          className={`flex items-center space-x-2 w-full text-left px-4 py-2 text-sm font-medium transition-colors ${darkMode
-                            ? "text-gray-300 hover:bg-gray-700 hover:text-white"
-                            : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-                            }`}
+                          className={`flex items-center space-x-2 w-full text-left px-4 py-2 text-sm font-medium transition-colors ${darkMode ? "text-gray-300 hover:bg-gray-700 hover:text-white" : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"}`}
                         >
                           <LogOut size={16} />
                           <span>Logout</span>
@@ -447,11 +421,10 @@ export default function Navbar() {
             )}
           </div>
 
-          <div className="md:hidden flex items-center space-x-2">
+          <div className="lg:hidden flex items-center space-x-2">
             <button
               onClick={handleThemeToggle}
-              className={`p-2 rounded-full transition-colors ${darkMode ? "bg-gray-800 text-yellow-300" : "bg-blue-100 text-sky-600"
-                }`}
+              className={`p-2 rounded-full transition-colors ${darkMode ? "bg-gray-800 text-yellow-300" : "bg-blue-100 text-sky-600"}`}
               aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
             >
               {darkMode ? <Sun size={18} /> : <Moon size={18} />}
@@ -498,8 +471,7 @@ export default function Navbar() {
             animate={{ clipPath: "circle(150% at 50% 20%)" }}
             exit={{ clipPath: "circle(0% at 90% 10%)" }}
             transition={{ duration: 0.5, ease: "easeInOut" }}
-            className={`md:hidden absolute top-full w-full shadow-lg overflow-hidden z-40 ${darkMode ? "bg-gray-800" : "bg-white"
-              }`}
+            className={`lg:hidden absolute top-full w-full shadow-lg overflow-hidden z-40 ${darkMode ? "bg-gray-800" : "bg-white"}`}
           >
             <div className="flex flex-col items-start space-y-1 py-2 px-4">
               <div className="w-full mb-4 search-container">
@@ -514,9 +486,7 @@ export default function Navbar() {
                 />
                 
                 {showSearchResults && (
-                  <div className={`mt-2 rounded-lg shadow-lg border max-h-64 overflow-y-auto ${
-                    darkMode ? "bg-gray-700 border-gray-600" : "bg-white border-gray-200"
-                  }`}>
+                  <div className={`mt-2 rounded-lg shadow-lg border max-h-64 overflow-y-auto ${darkMode ? "bg-gray-700 border-gray-600" : "bg-white border-gray-200"}`}>
                     {searchLoading ? (
                       <div className="p-3 text-center">
                         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-sky-600 mx-auto"></div>
@@ -534,11 +504,7 @@ export default function Navbar() {
                               setIsOpen(false);
                             }}
                             onMouseEnter={() => setHighlightedIndex(idx)}
-                            className={`w-full text-left px-3 py-2 flex items-center space-x-2 transition-colors ${
-                              highlightedIndex === idx
-                                ? "bg-sky-100 dark:bg-sky-700"
-                                : "hover:bg-gray-50 dark:hover:bg-gray-600"
-                            } ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+                            className={`w-full text-left px-3 py-2 flex items-center space-x-2 transition-colors ${highlightedIndex === idx ? "bg-sky-100 dark:bg-sky-700" : "hover:bg-gray-50 dark:hover:bg-gray-600"} ${darkMode ? "text-gray-300" : "text-gray-700"}`}
                           >
                             <div className="flex-shrink-0">
                               {user.profile?.avatar ? (
@@ -580,14 +546,7 @@ export default function Navbar() {
                   handleHomeClick();
                   setIsOpen(false);
                 }}
-                className={`w-full text-left px-4 py-2 rounded-md font-medium transition-all duration-200 ${darkMode
-                  ? isActive("/")
-                    ? "text-sky-400 bg-gray-700"
-                    : "text-gray-300 hover:bg-gray-700"
-                  : isActive("/")
-                    ? "text-sky-600 bg-sky-50"
-                    : "text-gray-700 hover:bg-gray-50"
-                  }`}
+                className={`w-full text-left px-4 py-2 rounded-md font-medium transition-all duration-200 ${darkMode ? (isActive("/") ? "text-sky-400 bg-gray-700" : "text-gray-300 hover:bg-gray-700") : (isActive("/") ? "text-sky-600 bg-sky-50" : "text-gray-700 hover:bg-gray-50")}`}
               >
                 Home
               </button>
@@ -620,10 +579,7 @@ export default function Navbar() {
                 <>
                   <Link
                     to="/profile"
-                    className={`w-full flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all ${darkMode
-                      ? "text-gray-300 hover:bg-gray-700"
-                      : "text-gray-700 hover:bg-gray-50"
-                      }`}
+                    className={`w-full flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all ${darkMode ? "text-gray-300 hover:bg-gray-700" : "text-gray-700 hover:bg-gray-50"}`}
                     onClick={() => setIsOpen(false)}
                     aria-current={isActive("/profile") ? "page" : undefined}
                   >
@@ -635,10 +591,7 @@ export default function Navbar() {
                       handleLogout();
                       setIsOpen(false);
                     }}
-                    className={`w-full flex items-center space-x-2 text-left px-4 py-2 rounded-lg font-medium transition-all ${darkMode
-                      ? "text-gray-300 hover:bg-gray-700"
-                      : "text-gray-700 hover:bg-gray-50"
-                      }`}
+                    className={`w-full flex items-center space-x-2 text-left px-4 py-2 rounded-lg font-medium transition-all ${darkMode ? "text-gray-300 hover:bg-gray-700" : "text-gray-700 hover:bg-gray-50"}`}
                   >
                     <LogOut size={16} />
                     <span>Logout</span>
@@ -677,14 +630,7 @@ function NavLink({ to, active, darkMode, children }) {
     <Link
       to={to}
       aria-current={active ? "page" : undefined}
-      className={`px-3 py-2 rounded-md font-medium transition-colors duration-200 ${darkMode
-        ? active
-          ? "text-sky-400"
-          : "text-gray-300 hover:text-sky-400"
-        : active
-          ? "text-sky-600"
-          : "text-gray-700 hover:text-sky-600"
-        }`}
+      className={`px-3 py-2 rounded-md font-medium transition-colors duration-200 ${darkMode ? (active ? "text-sky-400" : "text-gray-300 hover:text-sky-400") : (active ? "text-sky-600" : "text-gray-700 hover:text-sky-600")}`}
     >
       {children}
     </Link>
@@ -697,14 +643,7 @@ function MobileNavLink({ to, active, darkMode, onClick, children }) {
       to={to}
       onClick={onClick}
       aria-current={active ? "page" : undefined}
-      className={`w-full text-left px-4 py-2 rounded-md font-medium transition-all duration-200 ${darkMode
-        ? active
-          ? "text-sky-400 bg-gray-700"
-          : "text-gray-300 hover:bg-gray-700"
-        : active
-          ? "text-sky-600 bg-sky-50"
-          : "text-gray-700 hover:bg-gray-50"
-        }`}
+      className={`w-full text-left px-4 py-2 rounded-md font-medium transition-all duration-200 ${darkMode ? (active ? "text-sky-400 bg-gray-700" : "text-gray-300 hover:bg-gray-700") : (active ? "text-sky-600 bg-sky-50" : "text-gray-700 hover:bg-gray-50")}`}
     >
       {children}
     </Link>

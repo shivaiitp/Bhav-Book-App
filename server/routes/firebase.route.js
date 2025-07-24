@@ -119,6 +119,7 @@ router.post('/firebase-login', async (req, res) => {
 
 router.post('/firebase-google-auth', async (req, res) => {
   const { idToken } = req.body;
+  // console.log(idToken);
 
   if (!idToken) {
     return res.status(400).json({ success: false, message: 'ID token is required' });

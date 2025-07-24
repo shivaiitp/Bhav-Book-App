@@ -171,6 +171,9 @@ const SignupForm = () => {
 
       // Dispatch Redux Google auth action
       const resultAction = await dispatch(googleAuth(idToken));
+      
+      console.log("Google auth result:", resultAction);
+
 
       if (googleAuth.fulfilled.match(resultAction)) {
         setMessage("Google sign-up successful! Redirecting...");
